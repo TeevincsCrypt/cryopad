@@ -117,7 +117,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Live SOL Price */}
           <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#121215] border border-[#222227] text-xs font-mono">
             <span className="text-[#71717A] font-sans text-[11px]">SOL</span>
-            <span className="text-white font-medium">${solPriceUsd.toFixed(2)}</span>
+            <span className="text-white font-medium">${(solPriceUsd || 184.5).toFixed(2)}</span>
             <span className="text-emerald-400 text-[10px] flex items-center">
               +3.4%
             </span>

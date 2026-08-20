@@ -1,13 +1,29 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import { Token, Trade, Candle } from "../types/token";
 import { useSolana } from "../solana/solanaContext";
+import { SOL_PRICE_USD } from "../solana/bondingCurve";
+
+export interface UserHolding {
+  token: Token;
+  tokenMint: string;
+  tokenBalance: number;
+  balance: number;
+  avgBuyPriceSol: number;
+  currentValSol: number;
+  currentValUsd: number;
+  totalCostSol: number;
+  pnlSol: number;
+  pnlPercent: number;
+}
 
 interface TokenStoreContextType {
   tokens: Token[];
   isLoading: boolean;
   error: string | null;
+  solPriceUsd: number;
   trades: Record<string, Trade[]>;
   candles: Record<string, Candle[]>;
+  userTradeHistory: Trade[];
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   selectedCategory: string;
@@ -19,6 +35,8 @@ interface TokenStoreContextType {
   getTokenByMint: (mint: string) => Token | undefined;
   getTradesForToken: (mint: string) => Trade[];
   getCandlesForToken: (mint: string, interval?: string) => Candle[];
+  getUserHoldings: () => UserHolding[];
+  getUserCreatedTokens: () => Token[];
   refreshTokens: () => Promise<void>;
   recordLaunchedToken: (token: Partial<Token>) => Promise<void>;
   executeTrade: (params: {
@@ -36,8 +54,17 @@ export const TokenStoreProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [tokens, setTokens] = useState<Token[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [solPriceUsd, setSolPriceUsd] = useState<number>(SOL_PRICE_USD || 184.5);
   const [trades, setTrades] = useState<Record<string, Trade[]>>({});
   const [candles, setCandles] = useState<Record<string, Candle[]>>({});
+  const [userTrades, setUserTrades] = useState<Trade[]>(() => {
+    try {
+      const saved = localStorage.getItem("user_solana_trades");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [sortBy, setSortBy] = useState<'bump_order' | 'creation_time' | 'market_cap' | 'volume'>("bump_order");
@@ -264,8 +291,67 @@ export const TokenStoreProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       [params.tokenMint]: [newTrade, ...(prev[params.tokenMint] || [])],
     }));
 
+    setUserTrades((prev) => {
+      const updated = [newTrade, ...prev];
+      try {
+        localStorage.setItem("user_solana_trades", JSON.stringify(updated.slice(0, 100)));
+      } catch {}
+      return updated;
+    });
+
     return { signature };
   };
+
+  const getUserHoldings = useCallback((): UserHolding[] => {
+    if (!publicKey) return [];
+
+    const map = new Map<string, { balance: number; totalCostSol: number }>();
+    userTrades.forEach((tr) => {
+      const current = map.get(tr.tokenMint) || { balance: 0, totalCostSol: 0 };
+      if (tr.type === 'buy') {
+        current.balance += tr.tokenAmount;
+        current.totalCostSol += tr.solAmount;
+      } else {
+        current.balance = Math.max(0, current.balance - tr.tokenAmount);
+        current.totalCostSol = Math.max(0, current.totalCostSol - tr.solAmount);
+      }
+      map.set(tr.tokenMint, current);
+    });
+
+    const holdings: UserHolding[] = [];
+    map.forEach((val, mint) => {
+      if (val.balance > 0) {
+        const token = getTokenByMint(mint);
+        if (token) {
+          const currentValSol = val.balance * token.priceSol;
+          const currentValUsd = currentValSol * solPriceUsd;
+          const pnlSol = currentValSol - val.totalCostSol;
+          const pnlPercent = val.totalCostSol > 0 ? (pnlSol / val.totalCostSol) * 100 : 0;
+          holdings.push({
+            token,
+            tokenMint: mint,
+            tokenBalance: val.balance,
+            balance: val.balance,
+            avgBuyPriceSol: val.totalCostSol / (val.balance || 1),
+            currentValSol,
+            currentValUsd,
+            totalCostSol: val.totalCostSol,
+            pnlSol,
+            pnlPercent,
+          });
+        }
+      }
+    });
+
+    return holdings;
+  }, [publicKey, userTrades, getTokenByMint, solPriceUsd]);
+
+  const getUserCreatedTokens = useCallback((): Token[] => {
+    if (!publicKey) return [];
+    return tokens.filter(
+      (t) => t.creatorAddress?.toLowerCase() === publicKey.toLowerCase()
+    );
+  }, [publicKey, tokens]);
 
   return (
     <TokenStoreContext.Provider
@@ -273,8 +359,10 @@ export const TokenStoreProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         tokens,
         isLoading,
         error,
+        solPriceUsd,
         trades,
         candles,
+        userTradeHistory: userTrades,
         searchQuery,
         setSearchQuery,
         selectedCategory,
@@ -286,6 +374,8 @@ export const TokenStoreProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         getTokenByMint,
         getTradesForToken,
         getCandlesForToken,
+        getUserHoldings,
+        getUserCreatedTokens,
         refreshTokens,
         recordLaunchedToken,
         executeTrade,

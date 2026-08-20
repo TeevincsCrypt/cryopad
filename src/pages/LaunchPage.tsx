@@ -26,7 +26,10 @@ import { Token } from '../types/token';
 
 interface LaunchPageProps {
   onLaunchSuccess?: (token: Token) => void;
+  onTokenCreated?: (token: Token) => void;
   onSelectToken?: (token: Token) => void;
+  onNavigate?: (page: string) => void;
+  onOpenWalletModal?: () => void;
 }
 
 type LaunchStep =
@@ -41,7 +44,10 @@ type LaunchStep =
 
 export const LaunchPage: React.FC<LaunchPageProps> = ({
   onLaunchSuccess,
+  onTokenCreated,
   onSelectToken,
+  onNavigate,
+  onOpenWalletModal,
 }) => {
   const {
     connected,
@@ -265,6 +271,9 @@ export const LaunchPage: React.FC<LaunchPageProps> = ({
 
       if (onLaunchSuccess) {
         onLaunchSuccess(newToken as Token);
+      }
+      if (onTokenCreated) {
+        onTokenCreated(newToken as Token);
       }
     } catch (err: any) {
       console.error('Launch execution failed:', err);

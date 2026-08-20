@@ -14,6 +14,7 @@ import { LaunchPage } from './pages/LaunchPage';
 import { Dashboard } from './pages/Dashboard';
 import { Profile } from './pages/Profile';
 import { Token } from './types/token';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 type Page = 'home' | 'explore' | 'token' | 'launch' | 'dashboard' | 'profile';
 
@@ -218,10 +219,12 @@ const AppContent: React.FC = () => {
 
 export default function App() {
   return (
-    <SolanaProvider>
-      <TokenStoreProvider>
-        <AppContent />
-      </TokenStoreProvider>
-    </SolanaProvider>
+    <ErrorBoundary>
+      <SolanaProvider>
+        <TokenStoreProvider>
+          <AppContent />
+        </TokenStoreProvider>
+      </SolanaProvider>
+    </ErrorBoundary>
   );
 }

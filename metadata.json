@@ -1,5 +1,5 @@
 {
-  "name": "Solana Token Launchpad",
+  "name": "cryopad",
   "description": "Production-grade Solana token launchpad with bonding curve trading, real Solana Devnet wallet integration, live discovery, and instant token creation.",
   "requestFramePermissions": [],
   "majorCapabilities": [

@@ -6,9 +6,9 @@ import { useSolana } from '../solana/solanaContext';
 export const TransactionStatusModal: React.FC = () => {
   const { activeTxStatus, activeTxDescription, recentSignatures, network } = useSolana();
 
-  if (activeTxStatus === 'idle') return null;
+  if (!activeTxStatus || activeTxStatus === 'idle') return null;
 
-  const latestSig = recentSignatures[0]?.sig;
+  const latestSig = recentSignatures && recentSignatures.length > 0 ? recentSignatures[0]?.sig : null;
 
   return (
     <AnimatePresence>

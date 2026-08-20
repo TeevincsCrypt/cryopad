@@ -2,7 +2,11 @@ import React from 'react';
 import { Zap, ExternalLink, ShieldCheck, Activity, Terminal } from 'lucide-react';
 import { useSolana } from '../solana/solanaContext';
 
-export const Footer: React.FC = () => {
+interface FooterProps {
+  onNavigate?: (page: string) => void;
+}
+
+export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   const { network } = useSolana();
 
   return (

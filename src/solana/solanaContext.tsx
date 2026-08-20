@@ -30,6 +30,15 @@ export interface ManagedWallet {
   addedAt: number;
 }
 
+export type SolanaTxStatus = 'idle' | 'preparing' | 'awaiting_approval' | 'processing' | 'confirmed' | 'failed';
+
+export interface RecentSignature {
+  sig: string;
+  description: string;
+  status: 'confirmed' | 'failed';
+  timestamp: number;
+}
+
 export interface SolanaContextType {
   connected: boolean;
   connecting: boolean;
@@ -42,6 +51,10 @@ export interface SolanaContextType {
   connection: Connection;
   managedWallets: ManagedWallet[];
   minLaunchBalanceSol: number;
+  activeTxStatus: SolanaTxStatus;
+  activeTxDescription: string;
+  recentSignatures: RecentSignature[];
+  setActiveTx: (status: SolanaTxStatus, description?: string, sig?: string) => void;
   // Methods
   connectWallet: (providerType?: string) => Promise<void>;
   disconnectWallet: () => void;
@@ -100,6 +113,45 @@ export const SolanaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [balance, setBalance] = useState<number>(0);
   const [balanceLoading, setBalanceLoading] = useState<boolean>(false);
   const [minLaunchBalanceSol, setMinLaunchBalanceSol] = useState<number>(15.0);
+
+  // Transaction Status state
+  const [activeTxStatus, setActiveTxStatus] = useState<SolanaTxStatus>('idle');
+  const [activeTxDescription, setActiveTxDescription] = useState<string>('');
+  const [recentSignatures, setRecentSignatures] = useState<RecentSignature[]>(() => {
+    try {
+      const saved = localStorage.getItem("recent_solana_signatures");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const setActiveTx = useCallback((status: SolanaTxStatus, description?: string, sig?: string) => {
+    setActiveTxStatus(status);
+    if (description) setActiveTxDescription(description);
+
+    if (sig) {
+      setRecentSignatures((prev) => {
+        const item: RecentSignature = {
+          sig,
+          description: description || 'Solana Transaction',
+          status: status === 'failed' ? 'failed' : 'confirmed',
+          timestamp: Date.now(),
+        };
+        const updated = [item, ...prev.filter((p) => p.sig !== sig)].slice(0, 20);
+        try {
+          localStorage.setItem("recent_solana_signatures", JSON.stringify(updated));
+        } catch {}
+        return updated;
+      });
+    }
+
+    if (status === 'confirmed' || status === 'failed') {
+      setTimeout(() => {
+        setActiveTxStatus('idle');
+      }, 5000);
+    }
+  }, []);
 
   // Multi-wallet state
   const [managedWallets, setManagedWallets] = useState<ManagedWallet[]>(() => {
@@ -617,6 +669,10 @@ export const SolanaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         connection,
         managedWallets,
         minLaunchBalanceSol,
+        activeTxStatus,
+        activeTxDescription,
+        recentSignatures,
+        setActiveTx,
         connectWallet,
         disconnectWallet,
         setNetwork,

@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --bg-primary: #0A0A0B;
+    --bg-secondary: #0E0E10;
+    --bg-card: #121215;
+    --bg-elevated: #18181C;
+    --border-subtle: #1F1F23;
+    --border-card: #26262B;
+    --border-hover: #36363D;
+    --text-primary: #EDEDED;
+    --text-secondary: #A1A1AA;
+    --text-muted: #71717A;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: #0A0A0B;
+    color: #EDEDED;
+    overflow-x: hidden;
+    letter-spacing: -0.01em;
+  }
+
+  /* Custom subtle scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0A0A0B;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #27272A;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #3F3F46;
+  }
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Number animation flash */
+@keyframes greenFlash {
+  0% { background-color: rgba(16, 185, 129, 0.25); color: #34d399; }
+  100% { background-color: transparent; }
+}
+
+@keyframes redFlash {
+  0% { background-color: rgba(239, 68, 68, 0.25); color: #f87171; }
+  100% { background-color: transparent; }
+}
+
+.flash-up {
+  animation: greenFlash 1s ease-out;
+}
+
+.flash-down {
+  animation: redFlash 1s ease-out;
+}

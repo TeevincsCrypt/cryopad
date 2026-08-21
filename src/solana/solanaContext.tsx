@@ -12,6 +12,8 @@ import {
 import {
   createAssociatedTokenAccountIdempotentInstruction,
   getAssociatedTokenAddressSync,
+  createSetAuthorityInstruction,
+  AuthorityType,
 } from "@solana/spl-token";
 import {
   createPumpLaunchInstruction,
@@ -19,6 +21,7 @@ import {
   createPumpSellInstruction,
   PUMP_FUN_PROGRAM_ID,
 } from "./pumpFun";
+import { solPriceService, SolPriceData } from "../services/solPriceService";
 
 export type SolanaNetwork = "mainnet-beta" | "devnet";
 
@@ -50,7 +53,20 @@ export interface SolanaContextType {
   balanceLoading: boolean;
   connection: Connection;
   managedWallets: ManagedWallet[];
-  minLaunchBalanceSol: number;
+  
+  // Live SOL/USD price & Launch requirements
+  solPriceUsd: number | null;
+  solPrice24hChange: number;
+  solPriceLoading: boolean;
+  solPriceError: string | null;
+  solPriceSource: string;
+  minLaunchBalanceUsd: number;
+  minLaunchSolRequired: number | null;
+  walletUsdValue: number | null;
+  isLaunchEligible: boolean;
+  minLaunchBalanceSol: number; // dynamically calculated as minLaunchSolRequired
+  refreshSolPrice: () => Promise<SolPriceData | null>;
+
   activeTxStatus: SolanaTxStatus;
   activeTxDescription: string;
   recentSignatures: RecentSignature[];
@@ -68,6 +84,9 @@ export interface SolanaContextType {
     symbol: string;
     uri: string;
     initialBuySol?: number;
+    revokeMint?: boolean;
+    revokeFreeze?: boolean;
+    revokeUpdate?: boolean;
     onStatusChange?: (
       step: "building" | "awaiting_signature" | "submitting" | "confirming" | "confirmed" | "failed",
       message: string
@@ -112,7 +131,91 @@ export const SolanaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [walletName, setWalletName] = useState<string | null>(null);
   const [balance, setBalance] = useState<number>(0);
   const [balanceLoading, setBalanceLoading] = useState<boolean>(false);
-  const [minLaunchBalanceSol, setMinLaunchBalanceSol] = useState<number>(15.0);
+
+  // Live SOL price state
+  const [solPriceData, setSolPriceData] = useState<SolPriceData | null>(null);
+  const [solPriceLoading, setSolPriceLoading] = useState<boolean>(true);
+  const [solPriceError, setSolPriceError] = useState<string | null>(null);
+
+  // USD Minimum launch requirement (default $15.00 USD worth of SOL)
+  const [minLaunchBalanceUsd, setMinLaunchBalanceUsd] = useState<number>(() => {
+    try {
+      const envVal = (import.meta as any).env?.VITE_MIN_LAUNCH_BALANCE_USD;
+      if (envVal) {
+        const parsed = parseFloat(envVal);
+        if (!isNaN(parsed) && parsed > 0) return parsed;
+      }
+    } catch {
+      // fallback
+    }
+    return 15.0;
+  });
+
+  // Fetch server config on mount
+  useEffect(() => {
+    fetch('/api/config')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && typeof data.minLaunchBalanceUsd === 'number') {
+          setMinLaunchBalanceUsd(data.minLaunchBalanceUsd);
+        }
+      })
+      .catch((err) => {
+        console.warn('Could not fetch server /api/config:', err);
+      });
+  }, []);
+
+  // Subscribe to live SOL price service
+  useEffect(() => {
+    setSolPriceLoading(true);
+    const unsubscribe = solPriceService.subscribe((price, error) => {
+      setSolPriceData(price);
+      setSolPriceError(error);
+      setSolPriceLoading(false);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  const refreshSolPrice = useCallback(async () => {
+    setSolPriceLoading(true);
+    try {
+      const p = await solPriceService.fetchPrice();
+      setSolPriceData(p);
+      setSolPriceError(solPriceService.getError());
+      return p;
+    } finally {
+      setSolPriceLoading(false);
+    }
+  }, []);
+
+  const solPriceUsd = solPriceData?.priceUsd || null;
+  const solPrice24hChange = solPriceData?.change24hPercent || 0;
+  const solPriceSource = solPriceData?.source || 'Market Feed';
+
+  // Dynamic calculations from live price
+  // minimumSolRequired = 15 / currentSolPrice
+  const minLaunchSolRequired = useMemo(() => {
+    if (!solPriceUsd || solPriceUsd <= 0) return null;
+    return minLaunchBalanceUsd / solPriceUsd;
+  }, [minLaunchBalanceUsd, solPriceUsd]);
+
+  // walletUsdValue = walletSolBalance * currentSolPrice
+  const walletUsdValue = useMemo(() => {
+    if (!solPriceUsd || solPriceUsd <= 0) return null;
+    return balance * solPriceUsd;
+  }, [balance, solPriceUsd]);
+
+  // User is eligible only when: connected AND real price available AND walletUsdValue >= $15
+  const isLaunchEligible = useMemo(() => {
+    if (!connected || walletUsdValue === null || solPriceUsd === null) return false;
+    return walletUsdValue >= minLaunchBalanceUsd;
+  }, [connected, walletUsdValue, minLaunchBalanceUsd, solPriceUsd]);
+
+  // Dynamic alias for legacy code
+  const minLaunchBalanceSol = minLaunchSolRequired ?? (solPriceUsd ? minLaunchBalanceUsd / solPriceUsd : 0);
 
   // Transaction Status state
   const [activeTxStatus, setActiveTxStatus] = useState<SolanaTxStatus>('idle');
@@ -176,8 +279,8 @@ export const SolanaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     fetch("/api/config")
       .then((res) => res.json())
       .then((cfg) => {
-        if (cfg.minLaunchBalanceSol) {
-          setMinLaunchBalanceSol(cfg.minLaunchBalanceSol);
+        if (cfg.minLaunchBalanceUsd) {
+          setMinLaunchBalanceUsd(cfg.minLaunchBalanceUsd);
         }
         if (!localStorage.getItem("solana_network") && cfg.network) {
           setNetworkState(cfg.network);
@@ -381,6 +484,9 @@ export const SolanaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     symbol: string;
     uri: string;
     initialBuySol?: number;
+    revokeMint?: boolean;
+    revokeFreeze?: boolean;
+    revokeUpdate?: boolean;
     onStatusChange?: (
       step: "building" | "awaiting_signature" | "submitting" | "confirming" | "confirmed" | "failed",
       message: string
@@ -450,6 +556,28 @@ export const SolanaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         maxSolCostLamports: BigInt(Math.floor(initialSolLamports * 1.02)), // 2% slippage
       });
       tx.add(buyIx);
+    }
+
+    // 4. Security Authority Revocations (Immutable, Revoke Mint, Revoke Freeze)
+    if (params.revokeMint) {
+      tx.add(
+        createSetAuthorityInstruction(
+          mintPubkey,
+          creatorPubkey,
+          AuthorityType.MintTokens,
+          null
+        )
+      );
+    }
+    if (params.revokeFreeze) {
+      tx.add(
+        createSetAuthorityInstruction(
+          mintPubkey,
+          creatorPubkey,
+          AuthorityType.FreezeAccount,
+          null
+        )
+      );
     }
 
     const latestBlockhash = await connection.getLatestBlockhash("confirmed");
@@ -668,7 +796,17 @@ export const SolanaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         balanceLoading,
         connection,
         managedWallets,
+        solPriceUsd,
+        solPrice24hChange,
+        solPriceLoading,
+        solPriceError,
+        solPriceSource,
+        minLaunchBalanceUsd,
+        minLaunchSolRequired,
+        walletUsdValue,
+        isLaunchEligible,
         minLaunchBalanceSol,
+        refreshSolPrice,
         activeTxStatus,
         activeTxDescription,
         recentSignatures,

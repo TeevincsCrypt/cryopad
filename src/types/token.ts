@@ -36,7 +36,19 @@ export interface Token {
   isCreatedByUser?: boolean;
   isBonded?: boolean;
   txCount24h?: number;
+  // Trust & Security Authority Settings
+  revokeMint?: boolean;
+  revokeFreeze?: boolean;
+  revokeUpdate?: boolean; // Immutable metadata
+  securityScore?: number; // 0 - 100
+  clonedFrom?: {
+    name: string;
+    symbol: string;
+    mint?: string;
+  };
 }
+
+export type TradeCategory = 'sniper' | 'bot' | 'organic' | 'whale';
 
 export interface Trade {
   id: string;
@@ -51,6 +63,8 @@ export interface Trade {
   timestamp: number;
   txSignature: string;
   isUserTrade?: boolean;
+  tradeCategory?: TradeCategory;
+  walletLabel?: string;
 }
 
 export interface Candle {

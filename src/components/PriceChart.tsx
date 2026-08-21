@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { CandleData, Token } from '../types/token';
 import { formatCryptoPrice, formatCompactNumber } from '../solana/bondingCurve';
-import { BarChart3, LineChart, Maximize2 } from 'lucide-react';
+import { BarChart3, LineChart } from 'lucide-react';
 
 interface PriceChartProps {
   token: Token;
@@ -49,7 +49,6 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   const svgHeight = 360;
   const chartHeight = 280;
   const volumeHeight = 60;
-  const volumeTop = chartHeight + 10;
 
   // Map points to SVG coordinates
   const points = useMemo(() => {
@@ -95,19 +94,19 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   const isOverallGreen = token.priceChange24h >= 0;
 
   return (
-    <div className="w-full bg-[#121215] border border-[#26262B] rounded-2xl p-4 sm:p-5 shadow-xl space-y-4">
+    <div className="w-full bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs space-y-4">
       {/* Top Header: Price & Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-[#26262B]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-100">
         <div>
           <div className="flex items-baseline gap-3">
-            <span className="font-mono text-2xl sm:text-3xl font-extrabold text-white">
+            <span className="font-mono text-2xl sm:text-3xl font-black text-slate-900">
               {formatCryptoPrice(activeCandle ? activeCandle.close : token.priceUsd)}
             </span>
             <span
-              className={`font-mono text-xs font-semibold px-2 py-0.5 rounded-lg ${
+              className={`font-mono text-xs font-bold px-2 py-0.5 rounded-lg ${
                 isOverallGreen
-                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                  : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                  : 'bg-rose-50 text-rose-800 border border-rose-200'
               }`}
             >
               {isOverallGreen ? '+' : ''}
@@ -117,12 +116,12 @@ export const PriceChart: React.FC<PriceChartProps> = ({
 
           {/* OHLC Bar */}
           {activeCandle && (
-            <div className="flex items-center gap-3 text-[11px] font-mono text-[#A1A1AA] mt-1">
-              <span>O: <strong className="text-neutral-200">{formatCryptoPrice(activeCandle.open)}</strong></span>
-              <span>H: <strong className="text-neutral-200">{formatCryptoPrice(activeCandle.high)}</strong></span>
-              <span>L: <strong className="text-neutral-200">{formatCryptoPrice(activeCandle.low)}</strong></span>
-              <span>C: <strong className="text-neutral-200">{formatCryptoPrice(activeCandle.close)}</strong></span>
-              <span className="hidden md:inline text-[#71717A]">| Vol: {formatCompactNumber(activeCandle.volume)}</span>
+            <div className="flex items-center gap-3 text-[11px] font-mono text-slate-500 mt-1">
+              <span>O: <strong className="text-slate-800 font-semibold">{formatCryptoPrice(activeCandle.open)}</strong></span>
+              <span>H: <strong className="text-slate-800 font-semibold">{formatCryptoPrice(activeCandle.high)}</strong></span>
+              <span>L: <strong className="text-slate-800 font-semibold">{formatCryptoPrice(activeCandle.low)}</strong></span>
+              <span>C: <strong className="text-slate-800 font-semibold">{formatCryptoPrice(activeCandle.close)}</strong></span>
+              <span className="hidden md:inline text-slate-400">| Vol: {formatCompactNumber(activeCandle.volume)}</span>
             </div>
           )}
         </div>
@@ -130,15 +129,15 @@ export const PriceChart: React.FC<PriceChartProps> = ({
         {/* Timeframes and Chart Type Switchers */}
         <div className="flex items-center gap-2">
           {/* Timeframe Chips */}
-          <div className="flex items-center bg-[#18181C] p-1 rounded-xl border border-[#26262B]">
+          <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
             {timeframes.map((tf) => (
               <button
                 key={tf}
                 onClick={() => onSelectTimeframe(tf)}
-                className={`px-2.5 py-1 text-xs font-mono font-semibold rounded-lg transition-colors cursor-pointer ${
+                className={`px-2.5 py-1 text-xs font-mono font-bold rounded-lg transition-colors cursor-pointer ${
                   selectedTimeframe === tf
-                    ? 'bg-[#222227] text-emerald-400 shadow-sm'
-                    : 'text-[#A1A1AA] hover:text-white'
+                    ? 'bg-white text-emerald-800 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 {tf}
@@ -147,11 +146,11 @@ export const PriceChart: React.FC<PriceChartProps> = ({
           </div>
 
           {/* Chart Type Toggle */}
-          <div className="flex items-center bg-[#18181C] p-1 rounded-xl border border-[#26262B]">
+          <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
             <button
               onClick={() => setChartType('area')}
               className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                chartType === 'area' ? 'bg-[#222227] text-emerald-400' : 'text-[#A1A1AA] hover:text-white'
+                chartType === 'area' ? 'bg-white text-emerald-800 shadow-xs' : 'text-slate-600 hover:text-slate-900'
               }`}
               title="Area Line Chart"
             >
@@ -160,7 +159,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
             <button
               onClick={() => setChartType('candles')}
               className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                chartType === 'candles' ? 'bg-[#222227] text-emerald-400' : 'text-[#A1A1AA] hover:text-white'
+                chartType === 'candles' ? 'bg-white text-emerald-800 shadow-xs' : 'text-slate-600 hover:text-slate-900'
               }`}
               title="Candlestick Chart"
             >
@@ -180,25 +179,25 @@ export const PriceChart: React.FC<PriceChartProps> = ({
         >
           <defs>
             <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={isOverallGreen ? '#10b981' : '#f43f5e'} stopOpacity="0.22" />
-              <stop offset="100%" stopColor={isOverallGreen ? '#10b981' : '#f43f5e'} stopOpacity="0.0" />
+              <stop offset="0%" stopColor={isOverallGreen ? '#059669' : '#e11d48'} stopOpacity="0.2" />
+              <stop offset="100%" stopColor={isOverallGreen ? '#059669' : '#e11d48'} stopOpacity="0.0" />
             </linearGradient>
           </defs>
 
           {/* Grid lines */}
-          <line x1="0" y1={chartHeight * 0.25} x2={svgWidth} y2={chartHeight * 0.25} stroke="#1F1F23" strokeDasharray="3 3" />
-          <line x1="0" y1={chartHeight * 0.5} x2={svgWidth} y2={chartHeight * 0.5} stroke="#1F1F23" strokeDasharray="3 3" />
-          <line x1="0" y1={chartHeight * 0.75} x2={svgWidth} y2={chartHeight * 0.75} stroke="#1F1F23" strokeDasharray="3 3" />
-          <line x1="0" y1={chartHeight} x2={svgWidth} y2={chartHeight} stroke="#26262B" />
+          <line x1="0" y1={chartHeight * 0.25} x2={svgWidth} y2={chartHeight * 0.25} stroke="#f1f5f9" strokeDasharray="3 3" />
+          <line x1="0" y1={chartHeight * 0.5} x2={svgWidth} y2={chartHeight * 0.5} stroke="#f1f5f9" strokeDasharray="3 3" />
+          <line x1="0" y1={chartHeight * 0.75} x2={svgWidth} y2={chartHeight * 0.75} stroke="#f1f5f9" strokeDasharray="3 3" />
+          <line x1="0" y1={chartHeight} x2={svgWidth} y2={chartHeight} stroke="#e2e8f0" />
 
           {/* Price Axis Labels */}
-          <text x={svgWidth - 6} y={chartHeight * 0.25 - 4} textAnchor="end" fill="#71717A" fontSize="10" fontFamily="JetBrains Mono">
+          <text x={svgWidth - 6} y={chartHeight * 0.25 - 4} textAnchor="end" fill="#94a3b8" fontSize="10" fontFamily="JetBrains Mono">
             {formatCryptoPrice(minPrice + (maxPrice - minPrice) * 0.75)}
           </text>
-          <text x={svgWidth - 6} y={chartHeight * 0.5 - 4} textAnchor="end" fill="#71717A" fontSize="10" fontFamily="JetBrains Mono">
+          <text x={svgWidth - 6} y={chartHeight * 0.5 - 4} textAnchor="end" fill="#94a3b8" fontSize="10" fontFamily="JetBrains Mono">
             {formatCryptoPrice(minPrice + (maxPrice - minPrice) * 0.5)}
           </text>
-          <text x={svgWidth - 6} y={chartHeight * 0.75 - 4} textAnchor="end" fill="#71717A" fontSize="10" fontFamily="JetBrains Mono">
+          <text x={svgWidth - 6} y={chartHeight * 0.75 - 4} textAnchor="end" fill="#94a3b8" fontSize="10" fontFamily="JetBrains Mono">
             {formatCryptoPrice(minPrice + (maxPrice - minPrice) * 0.25)}
           </text>
 
@@ -210,7 +209,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
               y={p.yVol}
               width={6}
               height={p.volHeight}
-              fill={p.isGreen ? '#10b981' : '#f43f5e'}
+              fill={p.isGreen ? '#059669' : '#e11d48'}
               opacity="0.3"
             />
           ))}
@@ -222,7 +221,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
               <path
                 d={areaPath.line}
                 fill="none"
-                stroke={isOverallGreen ? '#10b981' : '#f43f5e'}
+                stroke={isOverallGreen ? '#059669' : '#e11d48'}
                 strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -233,7 +232,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
           {/* Candlestick Chart Mode */}
           {chartType === 'candles' &&
             points.map((p, i) => {
-              const candleColor = p.isGreen ? '#10b981' : '#f43f5e';
+              const candleColor = p.isGreen ? '#059669' : '#e11d48';
               const bodyTop = Math.min(p.yOpen, p.yClose);
               const bodyHeight = Math.max(2, Math.abs(p.yOpen - p.yClose));
 
@@ -282,9 +281,9 @@ export const PriceChart: React.FC<PriceChartProps> = ({
               if (!hp) return null;
               return (
                 <g>
-                  <line x1={hp.x} y1={0} x2={hp.x} y2={chartHeight} stroke="#71717A" strokeDasharray="3 3" />
-                  <line x1={0} y1={hp.yClose} x2={svgWidth} y2={hp.yClose} stroke="#71717A" strokeDasharray="3 3" />
-                  <circle cx={hp.x} cy={hp.yClose} r="4" fill="#34d399" stroke="#0A0A0B" strokeWidth="2" />
+                  <line x1={hp.x} y1={0} x2={hp.x} y2={chartHeight} stroke="#94a3b8" strokeDasharray="3 3" />
+                  <line x1={0} y1={hp.yClose} x2={svgWidth} y2={hp.yClose} stroke="#94a3b8" strokeDasharray="3 3" />
+                  <circle cx={hp.x} cy={hp.yClose} r="4" fill="#059669" stroke="#ffffff" strokeWidth="2" />
                 </g>
               );
             })()
@@ -293,9 +292,9 @@ export const PriceChart: React.FC<PriceChartProps> = ({
       </div>
 
       {/* Bottom Timeline Legend */}
-      <div className="flex items-center justify-between text-[11px] font-mono text-[#71717A] pt-1">
+      <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 pt-1">
         <span>{candles[0]?.timeStr || 'Past'}</span>
-        <span className="text-[#71717A]">AMM Constant Product Bonding Curve</span>
+        <span className="text-slate-500 font-semibold">AMM Constant Product Bonding Curve</span>
         <span>{candles[candles.length - 1]?.timeStr || 'Now'}</span>
       </div>
     </div>

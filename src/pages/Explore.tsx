@@ -10,11 +10,13 @@ import {
   Filter, 
   ArrowUpDown, 
   SlidersHorizontal,
-  PlusCircle
+  PlusCircle,
+  Copy,
 } from 'lucide-react';
 import { Token, TokenCategory } from '../types/token';
 import { TokenCard } from '../components/TokenCard';
 import { TokenTable } from '../components/TokenTable';
+import { TrendingTokens } from '../components/TrendingTokens';
 
 interface ExploreProps {
   tokens: Token[];
@@ -30,6 +32,7 @@ export const Explore: React.FC<ExploreProps> = ({ tokens, onSelectToken, onNavig
   const [tagFilter, setTagFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<SortOption>('volume');
+  const [showTrendingCloner, setShowTrendingCloner] = useState<boolean>(true);
 
   const categories: Array<{ id: TokenCategory; label: string; icon: React.ComponentType<{ className?: string }> }> = [
     { id: 'all', label: 'All Tokens', icon: Filter },
@@ -60,9 +63,9 @@ export const Explore: React.FC<ExploreProps> = ({ tokens, onSelectToken, onNavig
 
     // Category Filter
     if (selectedCategory === 'trending') {
-      result = result.filter((t) => t.volume24hSol > 50);
+      result = result.filter((t) => t.volume24hSol > 10 || t.bondingProgress > 15);
     } else if (selectedCategory === 'new') {
-      result = result.filter((t) => Date.now() - t.createdAt < 1000 * 60 * 60 * 6); // < 6 hours
+      result = result.filter((t) => Date.now() - t.createdAt < 1000 * 60 * 60 * 24);
     } else if (selectedCategory === 'graduating') {
       result = result.filter((t) => t.bondingProgress >= 50);
     }
@@ -86,68 +89,76 @@ export const Explore: React.FC<ExploreProps> = ({ tokens, onSelectToken, onNavig
   }, [tokens, searchQuery, selectedCategory, tagFilter, sortBy]);
 
   return (
-    <div className="space-y-6 py-4 sm:py-6">
-      
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-8 py-6 sm:py-8">
+      {/* Trending & Cloning Heatmap Section */}
+      {showTrendingCloner && (
+        <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-emerald-50/70 via-white to-teal-50/50 border border-emerald-200/80 shadow-xs space-y-6">
+          <TrendingTokens
+            onCloneToken={() => onNavigate('launch')}
+            onSelectToken={onSelectToken}
+          />
+        </div>
+      )}
+
+      {/* Main Exploration Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            Explore Solana Tokens
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            Explore Swagpad Bonding Curves
           </h1>
-          <p className="text-xs sm:text-sm text-neutral-400">
-            Real-time automated bonding curves on Solana. Discover freshly launched SPL tokens.
+          <p className="text-xs sm:text-sm text-slate-500">
+            Real-time automated bonding curves on Solana. Discover freshly launched SPL tokens with verified immutable authorities.
           </p>
         </div>
 
         <button
           onClick={() => onNavigate('launch')}
-          className="self-start md:self-auto px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all"
+          className="self-start md:self-auto px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer shadow-emerald-500/20"
         >
           <PlusCircle className="w-4 h-4 stroke-[2.5]" />
-          Launch Token
+          Launch & Bundle Token
         </button>
       </div>
 
       {/* Filter and Search Bar */}
       <div className="space-y-3">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
-          
           {/* Search Input */}
           <div className="relative flex-1">
-            <Search className="w-4 h-4 text-[#71717A] absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search token name, symbol ($CYBER), or contract address..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#141417] border border-[#26262B] focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-xs text-white placeholder-[#71717A] outline-none transition-all"
+              placeholder="Search token name, symbol ($SWAG), or contract address..."
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-xs text-slate-900 placeholder-slate-400 outline-none transition-all shadow-xs"
             />
           </div>
 
           {/* Sort & View Mode Switches */}
           <div className="flex items-center gap-2">
             {/* Sort Selector */}
-            <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#141417] border border-[#26262B] text-xs">
-              <ArrowUpDown className="w-3.5 h-3.5 text-[#71717A]" />
+            <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs shadow-xs">
+              <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="bg-transparent text-neutral-200 outline-none font-medium cursor-pointer"
+                className="bg-transparent text-slate-800 outline-none font-semibold cursor-pointer"
               >
-                <option value="volume" className="bg-[#141417] text-white">24h Volume</option>
-                <option value="market_cap" className="bg-[#141417] text-white">Market Cap</option>
-                <option value="change" className="bg-[#141417] text-white">24h Gainers</option>
-                <option value="newest" className="bg-[#141417] text-white">Newest First</option>
-                <option value="bonding_progress" className="bg-[#141417] text-white">Bonding Progress</option>
+                <option value="volume">24h Volume</option>
+                <option value="market_cap">Market Cap</option>
+                <option value="change">24h Gainers</option>
+                <option value="newest">Newest First</option>
+                <option value="bonding_progress">Bonding Progress</option>
               </select>
             </div>
 
             {/* Grid / List Switcher */}
-            <div className="flex items-center bg-[#141417] p-1 rounded-xl border border-[#26262B]">
+            <div className="flex items-center bg-white p-1 rounded-xl border border-slate-200 shadow-xs">
               <button
                 onClick={() => setViewMode('grid')}
                 className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                  viewMode === 'grid' ? 'bg-[#222227] text-emerald-400' : 'text-[#71717A] hover:text-white'
+                  viewMode === 'grid' ? 'bg-emerald-50 text-emerald-700 font-bold' : 'text-slate-400 hover:text-slate-900'
                 }`}
                 title="Grid View"
               >
@@ -156,7 +167,7 @@ export const Explore: React.FC<ExploreProps> = ({ tokens, onSelectToken, onNavig
               <button
                 onClick={() => setViewMode('list')}
                 className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                  viewMode === 'list' ? 'bg-[#222227] text-emerald-400' : 'text-[#71717A] hover:text-white'
+                  viewMode === 'list' ? 'bg-emerald-50 text-emerald-700 font-bold' : 'text-slate-400 hover:text-slate-900'
                 }`}
                 title="Table View"
               >
@@ -177,21 +188,21 @@ export const Explore: React.FC<ExploreProps> = ({ tokens, onSelectToken, onNavig
                 onClick={() => setSelectedCategory(cat.id)}
                 className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                   isActive
-                    ? 'bg-[#222227] text-white border border-[#3A3A42] shadow-sm'
-                    : 'bg-[#141417] text-[#A1A1AA] hover:text-white border border-[#26262B] hover:border-[#3A3A42]'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-50'
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-emerald-400' : 'text-[#71717A]'}`} />
+                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-slate-400'}`} />
                 {cat.label}
               </button>
             );
           })}
         </div>
 
-        {/* Sub-tags (AI, Meme, DeFi, Gaming, etc.) */}
+        {/* Sub-tags */}
         <div className="flex items-center gap-1.5 overflow-x-auto text-[11px]">
-          <span className="text-[#A1A1AA] text-xs font-medium mr-1 flex items-center gap-1">
-            <SlidersHorizontal className="w-3 h-3" /> Sector:
+          <span className="text-slate-500 text-xs font-semibold mr-1 flex items-center gap-1">
+            <SlidersHorizontal className="w-3 h-3 text-emerald-600" /> Sector:
           </span>
           {tagOptions.map((t) => (
             <button
@@ -199,8 +210,8 @@ export const Explore: React.FC<ExploreProps> = ({ tokens, onSelectToken, onNavig
               onClick={() => setTagFilter(t)}
               className={`px-2.5 py-0.5 rounded-lg font-mono uppercase transition-colors cursor-pointer ${
                 tagFilter === t
-                  ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40'
-                  : 'bg-[#141417] text-[#A1A1AA] hover:text-white border border-[#26262B]'
+                  ? 'bg-emerald-100 text-emerald-800 font-bold border border-emerald-300'
+                  : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-50'
               }`}
             >
               {t}
@@ -211,12 +222,12 @@ export const Explore: React.FC<ExploreProps> = ({ tokens, onSelectToken, onNavig
 
       {/* Main Display Area */}
       {filteredAndSortedTokens.length === 0 ? (
-        <div className="py-20 text-center rounded-2xl bg-[#121215] border border-[#26262B] space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-[#18181C] border border-[#26262B] flex items-center justify-center mx-auto text-[#71717A]">
+        <div className="py-20 text-center rounded-2xl bg-white border border-slate-200 space-y-3 shadow-xs">
+          <div className="w-12 h-12 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto text-slate-400">
             <Search className="w-6 h-6" />
           </div>
-          <h3 className="text-base font-bold text-white">No tokens matched your filters</h3>
-          <p className="text-xs text-[#A1A1AA] max-w-sm mx-auto">
+          <h3 className="text-base font-bold text-slate-900">No tokens matched your filters</h3>
+          <p className="text-xs text-slate-500 max-w-sm mx-auto">
             Try adjusting your search keywords or switching back to the "All Tokens" tab.
           </p>
           <button
@@ -225,7 +236,7 @@ export const Explore: React.FC<ExploreProps> = ({ tokens, onSelectToken, onNavig
               setSelectedCategory('all');
               setTagFilter('all');
             }}
-            className="px-4 py-2 rounded-xl bg-[#18181C] hover:bg-[#222227] text-white text-xs font-semibold border border-[#26262B] transition-colors cursor-pointer"
+            className="px-4 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-900 text-xs font-bold border border-slate-200 transition-colors cursor-pointer"
           >
             Clear Filters
           </button>

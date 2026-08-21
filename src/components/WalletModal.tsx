@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Wallet, CheckCircle2, AlertCircle, ExternalLink, ArrowRight, ShieldCheck, Zap, Layers, Plus } from 'lucide-react';
+import { X, Wallet, CheckCircle2, AlertCircle, ExternalLink, ArrowRight, ShieldCheck, Zap, Plus } from 'lucide-react';
 import { useSolana } from '../solana/solanaContext';
 import { shortenAddress } from '../solana/bondingCurve';
 
@@ -24,6 +24,10 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
     managedWallets,
     addManagedWallet,
     switchActiveWallet,
+    solPriceUsd,
+    walletUsdValue,
+    minLaunchBalanceUsd,
+    isLaunchEligible,
   } = useSolana();
 
   const [airdropLoading, setAirdropLoading] = useState(false);
@@ -97,7 +101,7 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+          className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs"
         />
 
         {/* Modal Window */}
@@ -106,34 +110,34 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 10 }}
           transition={{ duration: 0.18 }}
-          className="relative w-full max-w-md bg-[#121215] border border-[#26262B] rounded-2xl p-6 shadow-2xl overflow-hidden text-[#E5E5E5] space-y-4"
+          className="relative w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl overflow-hidden text-slate-900 space-y-4"
         >
           {/* Header */}
-          <div className="flex items-center justify-between pb-3 border-b border-[#26262B]">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
             <div className="flex items-center space-x-2.5">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+              <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-800">
                 <Wallet className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-base font-semibold text-white">
+                <h3 className="text-base font-bold text-slate-900">
                   {connected ? 'Solana Wallet Manager' : 'Connect Solana Wallet'}
                 </h3>
-                <p className="text-xs text-[#A1A1AA]">
-                  {connected ? `Connected via ${walletName}` : 'Select your installed wallet'}
+                <p className="text-xs text-slate-500">
+                  {connected ? `Connected via ${walletName}` : 'Select your installed Solana wallet'}
                 </p>
               </div>
             </div>
 
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-[#71717A] hover:text-white hover:bg-[#18181C] transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
           {errorMsg && (
-            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center gap-2">
+            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{errorMsg}</span>
             </div>
@@ -142,57 +146,75 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
           {/* Connected View */}
           {connected && publicKey ? (
             <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-[#18181C] border border-[#26262B] space-y-3">
-                <div className="flex items-center justify-between text-xs text-[#71717A]">
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                <div className="flex items-center justify-between text-xs text-slate-500">
                   <span>Active Address</span>
-                  <span className="flex items-center gap-1 text-emerald-400">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Active Signer
+                  <span className="flex items-center gap-1 text-emerald-700 font-semibold">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Active Signer
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-sm text-neutral-200 font-medium select-all">
+                  <span className="font-mono text-sm text-slate-900 font-bold select-all">
                     {shortenAddress(publicKey, 8)}
                   </span>
                   <a
                     href={`https://explorer.solana.com/address/${publicKey}?cluster=${network}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-xs text-[#71717A] hover:text-emerald-400 flex items-center gap-1 transition-colors"
+                    className="text-xs text-slate-500 hover:text-emerald-700 flex items-center gap-1 transition-colors font-medium"
                   >
                     Explorer <ExternalLink className="w-3 h-3" />
                   </a>
                 </div>
 
-                <div className="pt-2 border-t border-[#26262B] flex items-center justify-between">
-                  <span className="text-xs text-[#71717A]">On-Chain Balance</span>
+                <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
+                  <span className="text-xs text-slate-500">On-Chain Balance</span>
                   <div className="text-right">
-                    <span className="font-mono text-base font-bold text-white">
+                    <span className="font-mono text-base font-bold text-slate-900">
                       {balance.toFixed(4)} SOL
                     </span>
-                    <span className="block text-[11px] text-[#71717A]">
-                      ≈ ${(balance * 184.5).toFixed(2)} USD
+                    <span className="block text-[11px] text-slate-500">
+                      {solPriceUsd && walletUsdValue !== null
+                        ? `≈ $${walletUsdValue.toFixed(2)} USD (@ $${solPriceUsd.toFixed(2)}/SOL)`
+                        : 'Price loading...'}
                     </span>
                   </div>
                 </div>
               </div>
 
+              {/* Launch Qualification summary */}
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs flex items-center justify-between font-mono">
+                <span className="text-slate-600 text-[11px] font-sans">Launch Eligibility (${minLaunchBalanceUsd.toFixed(0)} Min):</span>
+                {solPriceUsd === null ? (
+                  <span className="text-amber-600 font-bold text-[11px]">Price loading...</span>
+                ) : isLaunchEligible ? (
+                  <span className="text-emerald-700 font-bold text-[11px] flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Eligible to launch
+                  </span>
+                ) : (
+                  <span className="text-amber-600 font-bold text-[11px]">
+                    Needs ${(minLaunchBalanceUsd - (walletUsdValue || 0)).toFixed(2)} more SOL
+                  </span>
+                )}
+              </div>
+
               {/* Devnet Faucet */}
               {network === 'devnet' && (
-                <div className="p-3.5 rounded-xl bg-emerald-950/20 border border-emerald-900/40 space-y-2">
+                <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 space-y-2">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-300">
-                      <Zap className="w-3.5 h-3.5 text-emerald-400" /> Devnet Faucet
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-900">
+                      <Zap className="w-3.5 h-3.5 text-emerald-600" /> Devnet Faucet
                     </div>
                     <button
                       onClick={handleAirdrop}
                       disabled={airdropLoading}
-                      className="px-2.5 py-1 text-xs font-medium rounded-lg bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-semibold transition-colors disabled:opacity-50 cursor-pointer"
+                      className="px-2.5 py-1 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition-colors disabled:opacity-50 cursor-pointer shadow-xs"
                     >
                       {airdropLoading ? 'Requesting...' : '+ Request 1 SOL'}
                     </button>
                   </div>
                   {airdropMsg && (
-                    <p className="text-[11px] text-emerald-400 leading-tight">
+                    <p className="text-[11px] text-emerald-800 font-medium leading-tight">
                       {airdropMsg}
                     </p>
                   )}
@@ -202,7 +224,7 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
               {/* Managed Wallets list */}
               {managedWallets.length > 1 && (
                 <div className="space-y-1.5">
-                  <span className="text-xs text-[#71717A] font-semibold block">Managed Wallets</span>
+                  <span className="text-xs text-slate-500 font-bold block">Managed Wallets</span>
                   <div className="max-h-28 overflow-y-auto space-y-1.5 pr-1">
                     {managedWallets.map((w) => (
                       <div
@@ -210,12 +232,12 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
                         onClick={() => switchActiveWallet(w.publicKey)}
                         className={`p-2 rounded-lg border text-xs flex items-center justify-between cursor-pointer transition-colors ${
                           w.publicKey === publicKey
-                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-                            : 'bg-[#18181C] border-[#26262B] text-[#A1A1AA] hover:text-white'
+                            ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-bold'
+                            : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
                         }`}
                       >
                         <span className="font-mono">{w.label} ({shortenAddress(w.publicKey, 4)})</span>
-                        {w.publicKey === publicKey && <span className="text-[10px] font-bold">CURRENT</span>}
+                        {w.publicKey === publicKey && <span className="text-[10px] font-bold text-emerald-700">ACTIVE</span>}
                       </div>
                     ))}
                   </div>
@@ -227,7 +249,7 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
                   disconnectWallet();
                   onClose();
                 }}
-                className="w-full py-2.5 px-4 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-medium border border-rose-500/20 transition-colors cursor-pointer"
+                className="w-full py-2.5 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold border border-rose-200 transition-colors cursor-pointer"
               >
                 Disconnect Wallet
               </button>
@@ -241,24 +263,24 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
                     key={wallet.id}
                     onClick={() => handleConnect(wallet.id)}
                     disabled={connecting}
-                    className="w-full p-3.5 rounded-xl bg-[#18181C] hover:bg-[#202026] border border-[#26262B] hover:border-[#3A3A42] flex items-center justify-between group transition-all cursor-pointer"
+                    className="w-full p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-emerald-300 flex items-center justify-between group transition-all cursor-pointer shadow-xs"
                   >
                     <div className="flex items-center space-x-3">
                       <img
                         src={wallet.icon}
                         alt={wallet.name}
-                        className="w-8 h-8 rounded-lg object-contain bg-[#0E0E10] p-1 border border-[#26262B]"
+                        className="w-8 h-8 rounded-lg object-contain bg-white p-1 border border-slate-200"
                         onError={(e) => {
                           (e.target as HTMLElement).style.display = 'none';
                         }}
                       />
                       <div className="text-left">
-                        <div className="text-sm font-medium text-white">{wallet.name}</div>
-                        <div className="text-xs text-[#A1A1AA]">{wallet.desc}</div>
+                        <div className="text-sm font-bold text-slate-900">{wallet.name}</div>
+                        <div className="text-xs text-slate-500">{wallet.desc}</div>
                       </div>
                     </div>
 
-                    <ArrowRight className="w-4 h-4 text-[#71717A] group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all" />
+                    <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition-all" />
                   </button>
                 ))}
               </div>
@@ -268,32 +290,32 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
                 <button
                   type="button"
                   onClick={() => setShowAddWatch(!showAddWatch)}
-                  className="w-full py-2 px-3 rounded-xl bg-[#18181C] border border-[#26262B] text-xs text-[#A1A1AA] hover:text-white flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  className="w-full py-2 px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                 >
-                  <Plus className="w-3.5 h-3.5" />
-                  Add User-Controlled Wallet to Manager
+                  <Plus className="w-3.5 h-3.5 text-emerald-600" />
+                  Add Address to Manager
                 </button>
 
                 {showAddWatch && (
-                  <form onSubmit={handleAddWatchWallet} className="mt-2 space-y-2 p-3 rounded-xl bg-[#18181C] border border-[#26262B]">
+                  <form onSubmit={handleAddWatchWallet} className="mt-2 space-y-2 p-3 rounded-xl bg-slate-50 border border-slate-200">
                     <input
                       type="text"
                       value={watchPubkey}
                       onChange={(e) => setWatchPubkey(e.target.value)}
                       placeholder="Solana Public Key (Base58)"
                       required
-                      className="w-full px-3 py-2 rounded-lg bg-[#121215] border border-[#26262B] text-xs text-white placeholder-[#71717A] font-mono outline-none"
+                      className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-xs text-slate-900 placeholder-slate-400 font-mono outline-none"
                     />
                     <input
                       type="text"
                       value={watchLabel}
                       onChange={(e) => setWatchLabel(e.target.value)}
                       placeholder="Wallet Label (e.g. Treasury Wallet)"
-                      className="w-full px-3 py-2 rounded-lg bg-[#121215] border border-[#26262B] text-xs text-white placeholder-[#71717A] outline-none"
+                      className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-xs text-slate-900 placeholder-slate-400 outline-none"
                     />
                     <button
                       type="submit"
-                      className="w-full py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-bold text-xs transition-colors cursor-pointer"
+                      className="w-full py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-colors cursor-pointer shadow-xs"
                     >
                       Save to Wallet List
                     </button>
@@ -301,31 +323,31 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
                 )}
               </div>
 
-              <div className="p-3 rounded-xl bg-[#18181C]/60 border border-[#26262B] flex items-start gap-2.5 text-xs text-[#A1A1AA]">
-                <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-start gap-2.5 text-xs text-slate-600">
+                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                 <div>
-                  <span className="text-neutral-300 font-medium">Non-Custodial:</span> Seed phrases and private keys are never requested or stored. All transactions require explicit wallet confirmation.
+                  <span className="text-slate-900 font-semibold">Non-Custodial:</span> Seed phrases and private keys are never requested or stored. All transactions require explicit wallet confirmation.
                 </div>
               </div>
             </div>
           )}
 
           {/* Cluster Switcher */}
-          <div className="pt-3 border-t border-[#26262B] flex items-center justify-between text-xs text-[#71717A]">
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
             <span>Solana Cluster:</span>
-            <div className="flex items-center gap-1 bg-[#18181C] p-1 rounded-lg border border-[#26262B]">
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
               <button
                 onClick={() => setNetwork('devnet')}
-                className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors cursor-pointer ${
-                  network === 'devnet' ? 'bg-emerald-500 text-neutral-950 font-bold' : 'text-[#71717A] hover:text-[#E5E5E5]'
+                className={`px-2.5 py-1 rounded text-[11px] font-bold transition-colors cursor-pointer ${
+                  network === 'devnet' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 Devnet
               </button>
               <button
                 onClick={() => setNetwork('mainnet-beta')}
-                className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors cursor-pointer ${
-                  network === 'mainnet-beta' ? 'bg-emerald-500 text-neutral-950 font-bold' : 'text-[#71717A] hover:text-[#E5E5E5]'
+                className={`px-2.5 py-1 rounded text-[11px] font-bold transition-colors cursor-pointer ${
+                  network === 'mainnet-beta' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 Mainnet

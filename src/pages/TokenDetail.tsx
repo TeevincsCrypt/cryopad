@@ -8,23 +8,21 @@ import {
   Globe, 
   Twitter, 
   Send, 
-  MessageSquare, 
-  ShieldCheck, 
-  Zap, 
   Users,
   Activity,
   Info,
-  Clock,
-  Layers
+  ShieldCheck,
+  Flame,
 } from 'lucide-react';
 import { Token, Holder } from '../types/token';
 import { useTokenStore } from '../data/tokenStore';
 import { useSolana } from '../solana/solanaContext';
 import { PriceChart } from '../components/PriceChart';
 import { BuySellPanel } from '../components/BuySellPanel';
-import { TradeHistory } from '../components/TradeHistory';
+import { LiveTradeFeed } from '../components/LiveTradeFeed';
 import { HoldersList } from '../components/HoldersList';
 import { ShareModal } from '../components/ShareModal';
+import { SecurityBadges } from '../components/SecurityBadges';
 import { 
   formatCryptoPrice, 
   formatCompactNumber, 
@@ -36,13 +34,19 @@ interface TokenDetailProps {
   token: Token;
   onBack: () => void;
   onOpenWalletModal: () => void;
+  onNavigate?: (page: string) => void;
 }
 
-export const TokenDetail: React.FC<TokenDetailProps> = ({ token, onBack, onOpenWalletModal }) => {
+export const TokenDetail: React.FC<TokenDetailProps> = ({
+  token,
+  onBack,
+  onOpenWalletModal,
+  onNavigate,
+}) => {
   const { network } = useSolana();
-  const { getTradesForToken, getCandlesForToken } = useTokenStore();
+  const { getTradesForToken, getCandlesForToken, setClonedTokenDraft } = useTokenStore();
 
-  const [activeTab, setActiveTab] = useState<'trades' | 'holders' | 'info'>('trades');
+  const [activeTab, setActiveTab] = useState<'trades' | 'holders' | 'security' | 'info'>('trades');
   const [timeframe, setTimeframe] = useState<'1m' | '5m' | '15m' | '1H' | '24H' | '7D'>('15m');
   const [copiedMint, setCopiedMint] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
@@ -104,13 +108,31 @@ export const TokenDetail: React.FC<TokenDetailProps> = ({ token, onBack, onOpenW
     setTimeout(() => setCopiedMint(false), 2000);
   };
 
+  const handleCloneThisToken = () => {
+    setClonedTokenDraft({
+      name: token.name,
+      symbol: token.symbol,
+      description: token.description,
+      logoUrl: token.logoUrl,
+      clonedFrom: {
+        name: token.name,
+        symbol: token.symbol,
+        mint: token.mintAddress,
+      },
+      socials: token.socials,
+    });
+    if (onNavigate) {
+      onNavigate('launch');
+    }
+  };
+
   return (
-    <div className="space-y-6 py-4 sm:py-6">
+    <div className="space-y-6 py-6 sm:py-8">
       {/* Top Breadcrumb & Action Bar */}
       <div className="flex items-center justify-between">
         <button
           onClick={onBack}
-          className="inline-flex items-center gap-2 text-xs font-semibold text-[#A1A1AA] hover:text-white transition-colors cursor-pointer bg-[#18181C] px-3 py-1.5 rounded-xl border border-[#26262B]"
+          className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors cursor-pointer bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-xs"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Explore
@@ -118,8 +140,15 @@ export const TokenDetail: React.FC<TokenDetailProps> = ({ token, onBack, onOpenW
 
         <div className="flex items-center gap-2">
           <button
+            onClick={handleCloneThisToken}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold transition-colors shadow-sm cursor-pointer"
+          >
+            <Flame className="w-3.5 h-3.5" />
+            Clone & Launch
+          </button>
+          <button
             onClick={() => setShareModalOpen(true)}
-            className="p-2 rounded-xl bg-[#18181C] hover:bg-[#222227] text-[#A1A1AA] hover:text-white border border-[#26262B] transition-colors cursor-pointer"
+            className="p-2 rounded-xl bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200 transition-colors cursor-pointer shadow-xs"
             title="Share Token"
           >
             <Share2 className="w-4 h-4" />
@@ -128,7 +157,7 @@ export const TokenDetail: React.FC<TokenDetailProps> = ({ token, onBack, onOpenW
             href={`https://pump.fun/coin/${token.mintAddress || token.id}`}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-bold border border-emerald-500/20 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-200 transition-colors shadow-xs"
           >
             Pump.fun Page <ExternalLink className="w-3 h-3" />
           </a>
@@ -136,172 +165,163 @@ export const TokenDetail: React.FC<TokenDetailProps> = ({ token, onBack, onOpenW
       </div>
 
       {/* Main Token Overview Header Card */}
-      <div className="p-5 sm:p-6 rounded-3xl bg-[#121215] border border-[#26262B] shadow-2xl space-y-5">
+      <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-5">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
           {/* Logo, Name, Symbol, Mint, Socials */}
           <div className="flex items-start sm:items-center gap-4">
             <img
               src={token.logoUrl}
               alt={token.name}
-              className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border border-[#26262B] shadow-lg shrink-0"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src =
-                  'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200&auto=format&fit=crop&q=80';
-              }}
+              className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border border-slate-200 shadow-md shrink-0"
             />
-
-            <div className="space-y-1.5 min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight truncate">
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
                   {token.name}
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-lg bg-[#18181C] border border-[#26262B] text-xs font-mono font-bold text-emerald-400">
+                <span className="px-2.5 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 font-mono font-bold text-xs border border-emerald-200">
                   ${token.symbol}
                 </span>
-                {isGraduated && (
-                  <span className="px-2 py-0.5 rounded-lg bg-teal-500/10 border border-teal-500/30 text-teal-300 text-[11px] font-bold">
-                    Raydium Migrated
+                {token.clonedFrom && (
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                    Cloned from {token.clonedFrom.name} (${token.clonedFrom.symbol})
                   </span>
                 )}
               </div>
 
-              {/* Mint & Creator */}
-              <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-[#71717A]">
+              {/* Mint Address & Copy */}
+              <div className="flex items-center gap-2">
                 <button
                   onClick={handleCopyMint}
-                  className="inline-flex items-center gap-1 hover:text-[#E5E5E5] transition-colors cursor-pointer bg-[#18181C] px-2 py-0.5 rounded border border-[#26262B]"
-                  title="Click to copy mint address"
+                  className="inline-flex items-center gap-1.5 text-xs font-mono text-slate-500 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 transition-colors cursor-pointer"
                 >
-                  <span>Mint: {shortenAddress(token.mintAddress || token.id, 4)}</span>
-                  {copiedMint ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                  <span>{shortenAddress(token.mintAddress || token.id, 6)}</span>
+                  {copiedMint ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
                 </button>
-
-                <span className="text-[#3A3A42]">•</span>
 
                 <a
                   href={`https://explorer.solana.com/address/${token.mintAddress || token.id}?cluster=${network}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="hover:text-emerald-400 flex items-center gap-0.5 transition-colors"
+                  className="text-slate-400 hover:text-emerald-700 transition-colors"
+                  title="View on Solana Explorer"
                 >
-                  Solscan <ExternalLink className="w-3 h-3" />
+                  <ExternalLink className="w-3.5 h-3.5" />
                 </a>
 
                 {/* Social Links */}
-                <div className="flex items-center gap-1.5 ml-2">
-                  {token.socials?.website && (
-                    <a
-                      href={token.socials.website}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="p-1.5 rounded-lg bg-[#18181C] hover:bg-[#222227] text-[#A1A1AA] hover:text-white border border-[#26262B] transition-colors"
-                      title="Website"
-                    >
-                      <Globe className="w-3.5 h-3.5" />
-                    </a>
-                  )}
-                  {token.socials?.twitter && (
-                    <a
-                      href={token.socials.twitter}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="p-1.5 rounded-lg bg-[#18181C] hover:bg-[#222227] text-[#A1A1AA] hover:text-white border border-[#26262B] transition-colors"
-                      title="Twitter/X"
-                    >
-                      <Twitter className="w-3.5 h-3.5" />
-                    </a>
-                  )}
-                  {token.socials?.telegram && (
-                    <a
-                      href={token.socials.telegram}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="p-1.5 rounded-lg bg-[#18181C] hover:bg-[#222227] text-[#A1A1AA] hover:text-white border border-[#26262B] transition-colors"
-                      title="Telegram"
-                    >
-                      <Send className="w-3.5 h-3.5" />
-                    </a>
-                  )}
-                </div>
+                {token.socials?.website && (
+                  <a
+                    href={token.socials.website}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="p-1 rounded-md text-slate-400 hover:text-emerald-600 transition-colors"
+                  >
+                    <Globe className="w-3.5 h-3.5" />
+                  </a>
+                )}
+                {token.socials?.twitter && (
+                  <a
+                    href={token.socials.twitter}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="p-1 rounded-md text-slate-400 hover:text-emerald-600 transition-colors"
+                  >
+                    <Twitter className="w-3.5 h-3.5" />
+                  </a>
+                )}
+                {token.socials?.telegram && (
+                  <a
+                    href={token.socials.telegram}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="p-1 rounded-md text-slate-400 hover:text-emerald-600 transition-colors"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                  </a>
+                )}
+              </div>
+
+              {/* Security Compact Badge */}
+              <div className="pt-1">
+                <SecurityBadges
+                  revokeMint={token.revokeMint !== false}
+                  revokeFreeze={token.revokeFreeze !== false}
+                  revokeUpdate={token.revokeUpdate !== false}
+                  securityScore={token.securityScore || 100}
+                  compact
+                />
               </div>
             </div>
           </div>
 
-          {/* Quick Price & 24h pill */}
-          <div className="flex items-center lg:flex-col lg:items-end justify-between gap-1 pt-2 lg:pt-0 border-t lg:border-t-0 border-[#1F1F23]">
-            <div className="text-left lg:text-right">
-              <span className="text-[11px] text-[#71717A] font-mono block">Current Price</span>
-              <span className="font-mono text-2xl font-extrabold text-white">
-                {formatCryptoPrice(token.priceUsd)}
-              </span>
+          {/* Current Live Price & 24h Change */}
+          <div className="text-left lg:text-right border-t lg:border-t-0 pt-3 lg:pt-0 border-slate-100">
+            <span className="text-xs text-slate-400 font-medium block">Live Token Price</span>
+            <div className="text-2xl sm:text-3xl font-extrabold font-mono text-slate-900 tracking-tight">
+              ${formatCryptoPrice(token.priceUsd)}
             </div>
-            <div
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-mono font-bold ${
-                isPositive
-                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                  : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-              }`}
-            >
+            <div className={`inline-flex items-center gap-1 font-mono font-bold text-xs mt-0.5 ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
               <span>{isPositive ? '+' : ''}{token.priceChange24h.toFixed(2)}%</span>
-              <span className="text-[10px] text-[#71717A] font-normal">(24h)</span>
+              <span className="text-[10px] text-slate-400 font-normal">(24h)</span>
             </div>
           </div>
         </div>
 
         {/* Key Metrics Bar */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 pt-4 border-t border-[#1F1F23] text-xs">
-          <div className="p-3 rounded-xl bg-[#18181C] border border-[#26262B]">
-            <span className="text-[#71717A] text-[11px] block">Market Cap</span>
-            <span className="font-mono font-bold text-white text-sm">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 pt-4 border-t border-slate-100 text-xs">
+          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+            <span className="text-slate-500 text-[11px] block">Market Cap</span>
+            <span className="font-mono font-bold text-slate-900 text-sm">
               ${formatCompactNumber(token.marketCapUsd)}
             </span>
-            <span className="font-mono text-[10px] text-[#A1A1AA] block">
+            <span className="font-mono text-[10px] text-slate-500 block">
               {token.marketCapSol.toFixed(1)} SOL
             </span>
           </div>
 
-          <div className="p-3 rounded-xl bg-[#18181C] border border-[#26262B]">
-            <span className="text-[#71717A] text-[11px] block">24h Volume</span>
-            <span className="font-mono font-bold text-white text-sm">
+          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+            <span className="text-slate-500 text-[11px] block">24h Volume</span>
+            <span className="font-mono font-bold text-slate-900 text-sm">
               {token.volume24hSol.toFixed(1)} SOL
             </span>
-            <span className="font-mono text-[10px] text-[#A1A1AA] block">
+            <span className="font-mono text-[10px] text-slate-500 block">
               ${formatCompactNumber(token.volume24hUsd)}
             </span>
           </div>
 
-          <div className="p-3 rounded-xl bg-[#18181C] border border-[#26262B]">
-            <span className="text-[#71717A] text-[11px] block">Liquidity</span>
-            <span className="font-mono font-bold text-white text-sm">
+          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+            <span className="text-slate-500 text-[11px] block">Liquidity</span>
+            <span className="font-mono font-bold text-slate-900 text-sm">
               {token.liquiditySol.toFixed(1)} SOL
             </span>
-            <span className="font-mono text-[10px] text-[#A1A1AA] block">
+            <span className="font-mono text-[10px] text-slate-500 block">
               Virtual AMM
             </span>
           </div>
 
-          <div className="p-3 rounded-xl bg-[#18181C] border border-[#26262B]">
-            <span className="text-[#71717A] text-[11px] block">Holders</span>
-            <span className="font-mono font-bold text-white text-sm">
+          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+            <span className="text-slate-500 text-[11px] block">Holders</span>
+            <span className="font-mono font-bold text-slate-900 text-sm">
               {token.holdersCount}
             </span>
-            <span className="text-[10px] text-emerald-400 flex items-center gap-0.5">
+            <span className="text-[10px] text-emerald-700 font-semibold flex items-center gap-0.5">
               <Users className="w-3 h-3" /> Non-custodial
             </span>
           </div>
 
-          <div className="p-3 rounded-xl bg-[#18181C] border border-[#26262B] col-span-2 sm:col-span-4 lg:col-span-1">
+          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 col-span-2 sm:col-span-4 lg:col-span-1">
             <div className="flex justify-between items-center text-[11px]">
-              <span className="text-[#A1A1AA] font-medium">Bonding Curve</span>
-              <span className="font-mono font-bold text-white">{token.bondingProgress.toFixed(1)}%</span>
+              <span className="text-slate-600 font-semibold">Bonding Curve</span>
+              <span className="font-mono font-bold text-slate-900">{token.bondingProgress.toFixed(1)}%</span>
             </div>
-            <div className="w-full h-1.5 bg-[#1C1C21] rounded-full mt-1.5 overflow-hidden">
+            <div className="w-full h-1.5 bg-slate-200 rounded-full mt-1.5 overflow-hidden">
               <div
-                className="h-full rounded-full bg-emerald-500"
+                className="h-full rounded-full bg-emerald-600"
                 style={{ width: `${Math.min(100, Math.max(3, token.bondingProgress))}%` }}
               />
             </div>
-            <span className="text-[10px] font-mono text-[#71717A] block mt-1">
+            <span className="text-[10px] font-mono text-slate-500 block mt-1">
               {token.solCollected.toFixed(1)} / {GRADUATION_SOL_TARGET} SOL
             </span>
           </div>
@@ -320,29 +340,38 @@ export const TokenDetail: React.FC<TokenDetailProps> = ({ token, onBack, onOpenW
           />
 
           <div className="space-y-4">
-            <div className="flex items-center gap-1 bg-[#121215] p-1 rounded-xl border border-[#26262B] w-fit text-xs">
+            <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 w-fit text-xs shadow-xs">
               <button
                 onClick={() => setActiveTab('trades')}
-                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer ${
-                  activeTab === 'trades' ? 'bg-[#222227] text-emerald-400 shadow-sm' : 'text-[#A1A1AA] hover:text-white'
+                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg font-bold transition-colors cursor-pointer ${
+                  activeTab === 'trades' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 <Activity className="w-3.5 h-3.5" />
-                Trades ({trades.length})
+                Live Swaps ({trades.length})
               </button>
               <button
                 onClick={() => setActiveTab('holders')}
-                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer ${
-                  activeTab === 'holders' ? 'bg-[#222227] text-emerald-400 shadow-sm' : 'text-[#A1A1AA] hover:text-white'
+                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg font-bold transition-colors cursor-pointer ${
+                  activeTab === 'holders' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 <Users className="w-3.5 h-3.5" />
                 Holders ({holders.length})
               </button>
               <button
+                onClick={() => setActiveTab('security')}
+                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg font-bold transition-colors cursor-pointer ${
+                  activeTab === 'security' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                Security & Authorities
+              </button>
+              <button
                 onClick={() => setActiveTab('info')}
-                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer ${
-                  activeTab === 'info' ? 'bg-[#222227] text-emerald-400 shadow-sm' : 'text-[#A1A1AA] hover:text-white'
+                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg font-bold transition-colors cursor-pointer ${
+                  activeTab === 'info' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 <Info className="w-3.5 h-3.5" />
@@ -350,35 +379,49 @@ export const TokenDetail: React.FC<TokenDetailProps> = ({ token, onBack, onOpenW
               </button>
             </div>
 
-            {activeTab === 'trades' && <TradeHistory trades={trades} />}
+            {activeTab === 'trades' && (
+              <LiveTradeFeed
+                trades={trades}
+                tokenSymbol={token.symbol}
+                tokenName={token.name}
+              />
+            )}
             {activeTab === 'holders' && <HoldersList holders={holders} />}
+            {activeTab === 'security' && (
+              <SecurityBadges
+                revokeMint={token.revokeMint !== false}
+                revokeFreeze={token.revokeFreeze !== false}
+                revokeUpdate={token.revokeUpdate !== false}
+                securityScore={token.securityScore || 100}
+              />
+            )}
             {activeTab === 'info' && (
-              <div className="p-5 rounded-2xl bg-[#121215] border border-[#26262B] text-xs space-y-4 shadow-xl">
+              <div className="p-5 rounded-2xl bg-white border border-slate-200 text-xs space-y-4 shadow-xs">
                 <div>
-                  <h4 className="font-bold text-white text-sm mb-1.5">Description</h4>
-                  <p className="text-neutral-300 leading-relaxed">
+                  <h4 className="font-bold text-slate-900 text-sm mb-1.5">Description</h4>
+                  <p className="text-slate-600 leading-relaxed">
                     {token.description}
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-[#1F1F23]">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
                   <div className="space-y-1">
-                    <span className="text-[#71717A] block font-medium">Creator Wallet</span>
-                    <span className="font-mono text-neutral-200">{token.creatorAddress}</span>
+                    <span className="text-slate-500 block font-medium">Creator Wallet</span>
+                    <span className="font-mono text-slate-800 font-semibold">{token.creatorAddress}</span>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-[#71717A] block font-medium">Creation Timestamp</span>
-                    <span className="font-mono text-neutral-200">
+                    <span className="text-slate-500 block font-medium">Creation Timestamp</span>
+                    <span className="font-mono text-slate-800 font-semibold">
                       {new Date(token.createdAt).toLocaleString()}
                     </span>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-[#71717A] block font-medium">Total Supply</span>
-                    <span className="font-mono text-neutral-200">1,000,000,000 (1 Billion) Fixed</span>
+                    <span className="text-slate-500 block font-medium">Total Supply</span>
+                    <span className="font-mono text-slate-800 font-semibold">1,000,000,000 (1 Billion) Fixed</span>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-[#71717A] block font-medium">Bonding Curve Target</span>
-                    <span className="font-mono text-emerald-400">
+                    <span className="text-slate-500 block font-medium">Bonding Curve Target</span>
+                    <span className="font-mono text-emerald-700 font-bold">
                       {GRADUATION_SOL_TARGET} SOL Target (Raydium Migration)
                     </span>
                   </div>
@@ -394,11 +437,10 @@ export const TokenDetail: React.FC<TokenDetailProps> = ({ token, onBack, onOpenW
         </div>
       </div>
 
-      {/* Share Card Modal */}
       <ShareModal
         isOpen={shareModalOpen}
-        onClose={() => setShareModalOpen(false)}
         token={token}
+        onClose={() => setShareModalOpen(false)}
       />
     </div>
   );

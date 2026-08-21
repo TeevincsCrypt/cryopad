@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { Settings2, AlertTriangle, CheckCircle2, Wallet, ExternalLink, ShieldCheck } from 'lucide-react';
+import { Settings2, AlertTriangle, CheckCircle2, Wallet, ExternalLink } from 'lucide-react';
 import { Token } from '../types/token';
 import { useSolana } from '../solana/solanaContext';
 import { useTokenStore } from '../data/tokenStore';
@@ -107,10 +107,10 @@ export const BuySellPanel: React.FC<BuySellPanelProps> = ({ token, onOpenWalletM
   };
 
   return (
-    <div className="w-full bg-[#121215] border border-[#26262B] rounded-2xl p-4 sm:p-5 shadow-2xl space-y-4">
+    <div className="w-full bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs space-y-4">
       {/* Mode Switcher Tabs + Settings */}
-      <div className="flex items-center justify-between pb-3 border-b border-[#26262B]">
-        <div className="flex items-center bg-[#18181C] p-1 rounded-xl border border-[#26262B]">
+      <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
           <button
             onClick={() => {
               setMode('buy');
@@ -118,8 +118,8 @@ export const BuySellPanel: React.FC<BuySellPanelProps> = ({ token, onOpenWalletM
             }}
             className={`px-5 py-1.5 rounded-lg text-xs font-bold font-mono transition-all cursor-pointer ${
               mode === 'buy'
-                ? 'bg-emerald-500 text-neutral-950 shadow-sm'
-                : 'text-[#A1A1AA] hover:text-white'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             BUY
@@ -131,8 +131,8 @@ export const BuySellPanel: React.FC<BuySellPanelProps> = ({ token, onOpenWalletM
             }}
             className={`px-5 py-1.5 rounded-lg text-xs font-bold font-mono transition-all cursor-pointer ${
               mode === 'sell'
-                ? 'bg-rose-500 text-white shadow-sm'
-                : 'text-[#A1A1AA] hover:text-white'
+                ? 'bg-rose-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             SELL
@@ -143,8 +143,8 @@ export const BuySellPanel: React.FC<BuySellPanelProps> = ({ token, onOpenWalletM
           onClick={() => setShowSettings(!showSettings)}
           className={`p-2 rounded-xl border transition-colors cursor-pointer ${
             showSettings
-              ? 'bg-[#222227] border-emerald-500/40 text-emerald-400'
-              : 'bg-[#18181C] border-[#26262B] text-[#A1A1AA] hover:text-white'
+              ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
+              : 'bg-slate-50 border-slate-200 text-slate-500 hover:text-slate-900'
           }`}
           title="Slippage & Priority Fee Settings"
         >
@@ -158,22 +158,22 @@ export const BuySellPanel: React.FC<BuySellPanelProps> = ({ token, onOpenWalletM
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
-          className="p-3.5 rounded-xl bg-[#18181C] border border-[#26262B] space-y-3 text-xs"
+          className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-3 text-xs"
         >
           <div className="space-y-1.5">
-            <div className="flex justify-between text-neutral-300 font-medium">
+            <div className="flex justify-between text-slate-700 font-semibold">
               <span>Slippage Tolerance</span>
-              <span className="font-mono text-emerald-400">{slippage}%</span>
+              <span className="font-mono text-emerald-700">{slippage}%</span>
             </div>
             <div className="flex gap-1.5">
               {[0.5, 1.0, 2.5, 5.0].map((s) => (
                 <button
                   key={s}
                   onClick={() => setSlippage(s)}
-                  className={`flex-1 py-1 rounded-lg text-[11px] font-mono font-semibold border transition-colors cursor-pointer ${
+                  className={`flex-1 py-1 rounded-lg text-[11px] font-mono font-bold border transition-colors cursor-pointer ${
                     slippage === s
-                      ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
-                      : 'bg-[#141417] border-[#26262B] text-[#A1A1AA] hover:text-white'
+                      ? 'bg-emerald-100 border-emerald-300 text-emerald-900'
+                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                   }`}
                 >
                   {s}%
@@ -183,9 +183,9 @@ export const BuySellPanel: React.FC<BuySellPanelProps> = ({ token, onOpenWalletM
           </div>
 
           <div className="space-y-1.5 pt-1">
-            <div className="flex justify-between text-neutral-300 font-medium">
+            <div className="flex justify-between text-slate-700 font-semibold">
               <span>MEV / Priority Fee</span>
-              <span className="font-mono text-[#71717A]">
+              <span className="font-mono text-slate-500">
                 {priorityFee === 'normal' ? '0.0001 SOL' : priorityFee === 'turbo' ? '0.001 SOL' : '0.005 SOL'}
               </span>
             </div>
@@ -194,10 +194,10 @@ export const BuySellPanel: React.FC<BuySellPanelProps> = ({ token, onOpenWalletM
                 <button
                   key={p}
                   onClick={() => setPriorityFee(p)}
-                  className={`flex-1 py-1 rounded-lg text-[11px] font-medium capitalize border transition-colors cursor-pointer ${
+                  className={`flex-1 py-1 rounded-lg text-[11px] font-bold capitalize border transition-colors cursor-pointer ${
                     priorityFee === p
-                      ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
-                      : 'bg-[#141417] border-[#26262B] text-[#A1A1AA] hover:text-white'
+                      ? 'bg-emerald-100 border-emerald-300 text-emerald-900'
+                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                   }`}
                 >
                   {p}
@@ -213,9 +213,9 @@ export const BuySellPanel: React.FC<BuySellPanelProps> = ({ token, onOpenWalletM
         {mode === 'buy' ? (
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-[#A1A1AA]">You Pay (SOL)</span>
-              <span className="font-mono text-[#71717A]">
-                Bal: <strong className="text-neutral-200">{balance.toFixed(3)} SOL</strong>
+              <span className="text-slate-600 font-semibold">You Pay (SOL)</span>
+              <span className="font-mono text-slate-500">
+                Bal: <strong className="text-slate-900 font-bold">{balance.toFixed(3)} SOL</strong>
               </span>
             </div>
 
@@ -230,9 +230,9 @@ export const BuySellPanel: React.FC<BuySellPanelProps> = ({ token, onOpenWalletM
                   setErrorMsg(null);
                 }}
                 placeholder="0.0"
-                className="w-full px-4 py-3 rounded-xl bg-[#18181C] border border-[#26262B] focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-white font-mono text-lg font-bold placeholder-[#71717A] outline-none pr-16"
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white text-slate-900 font-mono text-lg font-bold placeholder-slate-400 outline-none pr-16"
               />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#222227] border border-[#3A3A42] text-xs font-mono font-bold text-white">
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-200 text-xs font-mono font-bold text-slate-800">
                 <span>SOL</span>
               </div>
             </div>
@@ -243,7 +243,7 @@ export const BuySellPanel: React.FC<BuySellPanelProps> = ({ token, onOpenWalletM
                   type="button"
                   key={val}
                   onClick={() => handleQuickSol(val)}
-                  className="flex-1 py-1 rounded-lg bg-[#18181C] hover:bg-[#222227] border border-[#26262B] hover:border-[#3A3A42] text-[11px] font-mono text-[#A1A1AA] hover:text-white font-semibold transition-colors cursor-pointer"
+                  className="flex-1 py-1 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-[11px] font-mono text-slate-700 font-bold transition-colors cursor-pointer"
                 >
                   {val} SOL
                 </button>
@@ -251,20 +251,20 @@ export const BuySellPanel: React.FC<BuySellPanelProps> = ({ token, onOpenWalletM
               <button
                 type="button"
                 onClick={handleMaxSol}
-                className="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-[11px] font-mono text-emerald-400 font-bold transition-colors cursor-pointer"
+                className="px-2.5 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 border border-emerald-200 text-[11px] font-mono text-emerald-800 font-bold transition-colors cursor-pointer"
               >
                 MAX
               </button>
             </div>
 
-            <div className="p-3 rounded-xl bg-[#18181C] border border-[#26262B] space-y-1.5 text-xs">
-              <div className="flex items-center justify-between text-[#A1A1AA]">
+            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5 text-xs">
+              <div className="flex items-center justify-between text-slate-600">
                 <span>Estimated Receive</span>
-                <span className="font-bold text-emerald-400 font-mono text-sm">
+                <span className="font-bold text-emerald-700 font-mono text-sm">
                   ≈ {Math.floor(buyQuote.tokensOut).toLocaleString()} ${token.symbol}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-[11px] text-[#71717A] font-mono">
+              <div className="flex items-center justify-between text-[11px] text-slate-500 font-mono">
                 <span>Value</span>
                 <span>≈ ${(parseFloat(solAmount || '0') * SOL_PRICE_USD).toFixed(2)} USD</span>
               </div>
@@ -273,7 +273,7 @@ export const BuySellPanel: React.FC<BuySellPanelProps> = ({ token, onOpenWalletM
         ) : (
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-[#A1A1AA]">You Sell ({token.symbol})</span>
+              <span className="text-slate-600 font-semibold">You Sell ({token.symbol})</span>
             </div>
 
             <div className="relative">
@@ -287,21 +287,21 @@ export const BuySellPanel: React.FC<BuySellPanelProps> = ({ token, onOpenWalletM
                   setErrorMsg(null);
                 }}
                 placeholder="0"
-                className="w-full px-4 py-3 rounded-xl bg-[#18181C] border border-[#26262B] focus:border-rose-500 focus:ring-1 focus:ring-rose-500 text-white font-mono text-lg font-bold placeholder-[#71717A] outline-none pr-20"
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-rose-500 focus:bg-white text-slate-900 font-mono text-lg font-bold placeholder-slate-400 outline-none pr-20"
               />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#222227] border border-[#3A3A42] text-xs font-mono font-bold text-white">
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-200 text-xs font-mono font-bold text-slate-800">
                 <span>${token.symbol}</span>
               </div>
             </div>
 
-            <div className="p-3 rounded-xl bg-[#18181C] border border-[#26262B] space-y-1.5 text-xs">
-              <div className="flex items-center justify-between text-[#A1A1AA]">
+            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5 text-xs">
+              <div className="flex items-center justify-between text-slate-600">
                 <span>Estimated Return</span>
-                <span className="font-bold text-rose-400 font-mono text-sm">
+                <span className="font-bold text-rose-700 font-mono text-sm">
                   ≈ {sellQuote.solOut.toFixed(4)} SOL
                 </span>
               </div>
-              <div className="flex items-center justify-between text-[11px] text-[#71717A] font-mono">
+              <div className="flex items-center justify-between text-[11px] text-slate-500 font-mono">
                 <span>Value</span>
                 <span>≈ ${(sellQuote.solOut * SOL_PRICE_USD).toFixed(2)} USD</span>
               </div>
@@ -309,37 +309,37 @@ export const BuySellPanel: React.FC<BuySellPanelProps> = ({ token, onOpenWalletM
           </div>
         )}
 
-        <div className="pt-2 border-t border-[#1F1F23] space-y-1 text-[11px] font-mono text-[#71717A]">
+        <div className="pt-2 border-t border-slate-100 space-y-1 text-[11px] font-mono text-slate-500">
           <div className="flex justify-between">
             <span>Price per Token</span>
-            <span className="text-neutral-200">{formatCryptoPrice(token.priceUsd)}</span>
+            <span className="text-slate-800 font-bold">{formatCryptoPrice(token.priceUsd)}</span>
           </div>
           <div className="flex justify-between">
             <span>Program Protocol</span>
-            <span className="text-emerald-400 font-mono">Pump.fun On-Chain</span>
+            <span className="text-emerald-700 font-bold">Pump.fun On-Chain</span>
           </div>
         </div>
 
         {errorMsg && (
-          <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center gap-2">
+          <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 shrink-0" />
             <span>{errorMsg}</span>
           </div>
         )}
 
         {txSignature && (
-          <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs space-y-1">
-            <div className="flex items-center gap-2 font-semibold">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+          <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs space-y-1">
+            <div className="flex items-center gap-2 font-bold">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
               <span>Transaction Confirmed On-Chain</span>
             </div>
-            <div className="font-mono text-[11px] flex items-center justify-between text-[#A1A1AA]">
+            <div className="font-mono text-[11px] flex items-center justify-between text-slate-600">
               <span>Explorer:</span>
               <a
                 href={`https://explorer.solana.com/tx/${txSignature}?cluster=${network}`}
                 target="_blank"
                 rel="noreferrer"
-                className="text-emerald-400 hover:underline flex items-center gap-1"
+                className="text-emerald-700 hover:underline flex items-center gap-1 font-bold"
               >
                 {txSignature.slice(0, 8)}...{txSignature.slice(-6)}
                 <ExternalLink className="w-3 h-3" />
@@ -352,7 +352,7 @@ export const BuySellPanel: React.FC<BuySellPanelProps> = ({ token, onOpenWalletM
           <button
             type="button"
             onClick={onOpenWalletModal}
-            className="w-full py-3.5 rounded-xl bg-[#18181C] hover:bg-[#222227] text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer border border-[#26262B]"
+            className="w-full py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
           >
             <Wallet className="w-4 h-4 text-emerald-400" />
             Connect Solana Wallet to Trade
@@ -361,10 +361,10 @@ export const BuySellPanel: React.FC<BuySellPanelProps> = ({ token, onOpenWalletM
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-3.5 rounded-xl font-extrabold text-xs transition-all shadow-lg cursor-pointer disabled:opacity-50 ${
+            className={`w-full py-3.5 rounded-xl font-bold text-xs transition-all shadow-md cursor-pointer disabled:opacity-50 ${
               mode === 'buy'
-                ? 'bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 text-neutral-950 shadow-emerald-500/10'
-                : 'bg-rose-500 hover:bg-rose-400 active:bg-rose-600 text-white shadow-rose-500/10'
+                ? 'bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white shadow-emerald-500/20'
+                : 'bg-rose-600 hover:bg-rose-500 active:bg-rose-700 text-white shadow-rose-500/20'
             }`}
           >
             {loading

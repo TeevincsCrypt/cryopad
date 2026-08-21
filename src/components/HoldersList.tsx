@@ -18,42 +18,42 @@ export const HoldersList: React.FC<HoldersListProps> = ({ holders }) => {
   };
 
   return (
-    <div className="w-full bg-[#121215] border border-[#26262B] rounded-2xl p-4 sm:p-5 shadow-xl space-y-4">
-      <div className="flex items-center justify-between pb-3 border-b border-[#26262B]">
-        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+    <div className="w-full bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs space-y-4">
+      <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
           <span>Top Token Holders</span>
-          <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-[#18181C] text-[#A1A1AA] border border-[#26262B]">
+          <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 font-bold">
             {holders.length} accounts
           </span>
         </h3>
-        <span className="text-xs text-[#71717A]">1B Max Fixed Supply</span>
+        <span className="text-xs text-slate-500 font-semibold">1B Max Fixed Supply</span>
       </div>
 
       <div className="space-y-3">
         {holders.map((holder) => (
           <div
             key={holder.address}
-            className="p-3 rounded-xl bg-[#18181C] border border-[#26262B] hover:border-[#3A3A42] transition-colors space-y-2"
+            className="p-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-emerald-300 transition-colors space-y-2"
           >
             <div className="flex items-center justify-between text-xs">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-[#71717A] text-[11px] w-4">
+                <span className="font-mono text-slate-400 text-[11px] w-4 font-bold">
                   #{holder.rank}
                 </span>
 
-                <span className="font-mono text-white font-medium">
+                <span className="font-mono text-slate-900 font-bold">
                   {holder.addressShort}
                 </span>
 
                 {holder.isBondingCurvePool && (
-                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1 font-sans">
-                    <ShieldCheck className="w-3 h-3" /> AMM Pool
+                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1 font-sans font-bold">
+                    <ShieldCheck className="w-3 h-3 text-emerald-600" /> AMM Pool
                   </span>
                 )}
 
                 {holder.isCreator && (
-                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center gap-1 font-sans">
-                    <Crown className="w-3 h-3" /> Creator
+                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1 font-sans font-bold">
+                    <Crown className="w-3 h-3 text-amber-600" /> Creator
                   </span>
                 )}
               </div>
@@ -61,11 +61,11 @@ export const HoldersList: React.FC<HoldersListProps> = ({ holders }) => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleCopy(holder.address)}
-                  className="text-[#71717A] hover:text-white transition-colors cursor-pointer"
+                  className="text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
                   title="Copy address"
                 >
                   {copiedAddress === holder.address ? (
-                    <Check className="w-3 h-3 text-emerald-400" />
+                    <Check className="w-3 h-3 text-emerald-600" />
                   ) : (
                     <Copy className="w-3 h-3" />
                   )}
@@ -75,7 +75,7 @@ export const HoldersList: React.FC<HoldersListProps> = ({ holders }) => {
                   href={`https://explorer.solana.com/address/${holder.address}?cluster=${network}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-[#71717A] hover:text-emerald-400 transition-colors"
+                  className="text-slate-400 hover:text-emerald-700 transition-colors font-bold"
                   title="View on Explorer"
                 >
                   <ExternalLink className="w-3 h-3" />
@@ -85,14 +85,14 @@ export const HoldersList: React.FC<HoldersListProps> = ({ holders }) => {
 
             {/* Percentage & Balance Bar */}
             <div className="space-y-1">
-              <div className="flex justify-between text-[11px] font-mono text-[#A1A1AA]">
+              <div className="flex justify-between text-[11px] font-mono text-slate-500">
                 <span>{Math.floor(holder.balance).toLocaleString()} tokens</span>
-                <span className="font-bold text-neutral-200">{holder.percentage.toFixed(2)}%</span>
+                <span className="font-bold text-slate-900">{holder.percentage.toFixed(2)}%</span>
               </div>
-              <div className="w-full h-1.5 rounded-full bg-[#26262B] overflow-hidden">
+              <div className="w-full h-1.5 rounded-full bg-slate-200 overflow-hidden">
                 <div
                   className={`h-full rounded-full ${
-                    holder.isBondingCurvePool ? 'bg-emerald-500' : 'bg-[#A1A1AA]'
+                    holder.isBondingCurvePool ? 'bg-emerald-600' : 'bg-slate-400'
                   }`}
                   style={{ width: `${Math.min(100, holder.percentage)}%` }}
                 />

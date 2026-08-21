@@ -10,9 +10,9 @@ interface TokenTableProps {
 
 export const TokenTable: React.FC<TokenTableProps> = ({ tokens, onSelectToken }) => {
   return (
-    <div className="w-full overflow-x-auto rounded-2xl border border-[#26262B] bg-[#121215] shadow-xl">
-      <table className="w-full text-left text-xs text-[#EDEDED]">
-        <thead className="bg-[#18181C] text-[11px] font-semibold text-[#A1A1AA] uppercase tracking-wider border-b border-[#26262B]">
+    <div className="w-full overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-xs">
+      <table className="w-full text-left text-xs text-slate-800">
+        <thead className="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">
           <tr>
             <th className="py-3.5 px-4">#</th>
             <th className="py-3.5 px-4">Token</th>
@@ -26,7 +26,7 @@ export const TokenTable: React.FC<TokenTableProps> = ({ tokens, onSelectToken })
           </tr>
         </thead>
 
-        <tbody className="divide-y divide-[#1F1F23]">
+        <tbody className="divide-y divide-slate-100">
           {tokens.map((token, index) => {
             const isPositive = token.priceChange24h >= 0;
             const isGraduated = token.bondingProgress >= 100;
@@ -35,10 +35,10 @@ export const TokenTable: React.FC<TokenTableProps> = ({ tokens, onSelectToken })
               <tr
                 key={token.id}
                 onClick={() => onSelectToken(token)}
-                className="hover:bg-[#18181C]/60 cursor-pointer transition-colors group"
+                className="hover:bg-slate-50/80 cursor-pointer transition-colors group"
               >
                 {/* Index */}
-                <td className="py-3.5 px-4 font-mono text-[#71717A] text-xs">
+                <td className="py-3.5 px-4 font-mono text-slate-400 text-xs">
                   {index + 1}
                 </td>
 
@@ -48,7 +48,7 @@ export const TokenTable: React.FC<TokenTableProps> = ({ tokens, onSelectToken })
                     <img
                       src={token.logoUrl}
                       alt={token.name}
-                      className="w-9 h-9 rounded-xl object-cover border border-[#2A2A30] bg-[#18181C] shrink-0 group-hover:border-emerald-500/40 transition-colors"
+                      className="w-9 h-9 rounded-xl object-cover border border-slate-200 bg-slate-100 shrink-0 group-hover:border-emerald-500 transition-colors"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src =
                           'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200&auto=format&fit=crop&q=80';
@@ -56,17 +56,17 @@ export const TokenTable: React.FC<TokenTableProps> = ({ tokens, onSelectToken })
                     />
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-white group-hover:text-emerald-400 transition-colors">
+                        <span className="font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">
                           {token.name}
                         </span>
                         {isGraduated && (
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                         )}
                       </div>
-                      <div className="flex items-center gap-1 text-[11px] font-mono text-[#A1A1AA]">
-                        <span className="font-semibold text-neutral-200">${token.symbol}</span>
+                      <div className="flex items-center gap-1 text-[11px] font-mono text-slate-500">
+                        <span className="font-bold text-slate-800">${token.symbol}</span>
                         {token.category && (
-                          <span className="text-[9px] px-1 py-0.2 rounded bg-[#1C1C21] text-[#A1A1AA] uppercase">
+                          <span className="text-[9px] px-1 py-0.2 rounded bg-slate-100 text-slate-600 uppercase font-sans">
                             {token.category}
                           </span>
                         )}
@@ -77,10 +77,10 @@ export const TokenTable: React.FC<TokenTableProps> = ({ tokens, onSelectToken })
 
                 {/* Price */}
                 <td className="py-3.5 px-4 text-right font-mono">
-                  <div className="font-semibold text-white">
+                  <div className="font-bold text-slate-900">
                     {formatCryptoPrice(token.priceUsd)}
                   </div>
-                  <div className="text-[10px] text-[#A1A1AA]">
+                  <div className="text-[10px] text-slate-500">
                     {token.priceSol.toFixed(8)} SOL
                   </div>
                 </td>
@@ -88,10 +88,10 @@ export const TokenTable: React.FC<TokenTableProps> = ({ tokens, onSelectToken })
                 {/* 24h Change */}
                 <td className="py-3.5 px-4 text-right font-mono">
                   <span
-                    className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded text-xs font-semibold ${
+                    className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded text-xs font-bold ${
                       isPositive
-                        ? 'text-emerald-400 bg-emerald-500/10'
-                        : 'text-rose-400 bg-rose-500/10'
+                        ? 'text-emerald-700 bg-emerald-50 border border-emerald-200'
+                        : 'text-rose-700 bg-rose-50 border border-rose-200'
                     }`}
                   >
                     {isPositive ? (
@@ -106,20 +106,20 @@ export const TokenTable: React.FC<TokenTableProps> = ({ tokens, onSelectToken })
 
                 {/* Market Cap */}
                 <td className="py-3.5 px-4 text-right font-mono">
-                  <div className="font-bold text-white">
+                  <div className="font-bold text-slate-900">
                     ${formatCompactNumber(token.marketCapUsd)}
                   </div>
-                  <div className="text-[10px] text-[#A1A1AA]">
+                  <div className="text-[10px] text-slate-500">
                     {token.marketCapSol.toFixed(1)} SOL
                   </div>
                 </td>
 
                 {/* Volume */}
                 <td className="py-3.5 px-4 text-right font-mono">
-                  <div className="font-medium text-neutral-200">
+                  <div className="font-semibold text-slate-800">
                     {token.volume24hSol.toFixed(1)} SOL
                   </div>
-                  <div className="text-[10px] text-[#A1A1AA]">
+                  <div className="text-[10px] text-slate-500">
                     ${formatCompactNumber(token.volume24hUsd)}
                   </div>
                 </td>
@@ -128,17 +128,17 @@ export const TokenTable: React.FC<TokenTableProps> = ({ tokens, onSelectToken })
                 <td className="py-3.5 px-4 min-w-[140px]">
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-[10px] font-mono">
-                      <span className="text-[#A1A1AA]">
+                      <span className="text-slate-500">
                         {isGraduated ? 'Raydium Pool' : `${token.solCollected.toFixed(1)}/85 SOL`}
                       </span>
-                      <span className="font-bold text-white">
+                      <span className="font-bold text-slate-900">
                         {token.bondingProgress.toFixed(1)}%
                       </span>
                     </div>
-                    <div className="w-full h-1.5 bg-[#1C1C21] rounded-full overflow-hidden">
+                    <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full ${
-                          isGraduated ? 'bg-gradient-to-r from-emerald-500 to-teal-400' : 'bg-emerald-500'
+                          isGraduated ? 'bg-gradient-to-r from-emerald-600 to-teal-500' : 'bg-emerald-500'
                         }`}
                         style={{ width: `${Math.min(100, Math.max(3, token.bondingProgress))}%` }}
                       />
@@ -147,7 +147,7 @@ export const TokenTable: React.FC<TokenTableProps> = ({ tokens, onSelectToken })
                 </td>
 
                 {/* Holders */}
-                <td className="py-3.5 px-4 text-right font-mono text-neutral-300">
+                <td className="py-3.5 px-4 text-right font-mono text-slate-700">
                   {token.holdersCount}
                 </td>
 
@@ -158,7 +158,7 @@ export const TokenTable: React.FC<TokenTableProps> = ({ tokens, onSelectToken })
                       e.stopPropagation();
                       onSelectToken(token);
                     }}
-                    className="px-3 py-1.5 rounded-lg bg-[#18181C] hover:bg-emerald-500 hover:text-neutral-950 text-neutral-200 text-xs font-semibold transition-all inline-flex items-center gap-1 group-hover:bg-[#222227] cursor-pointer"
+                    className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-emerald-600 hover:text-white text-slate-800 text-xs font-bold transition-all inline-flex items-center gap-1 cursor-pointer"
                   >
                     Trade <ArrowRight className="w-3 h-3" />
                   </button>

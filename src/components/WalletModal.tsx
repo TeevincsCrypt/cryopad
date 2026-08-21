@@ -75,7 +75,7 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
     setAirdropMsg(null);
     try {
       const sig = await requestAirdrop();
-      setAirdropMsg(`Airdropped 1 SOL! (Sig: ${sig.slice(0, 8)}...)`);
+      setAirdropMsg(`+1.0 SOL Devnet successfully credited! (Sig: ${sig.slice(0, 8)}...)`);
     } catch (err: any) {
       setAirdropMsg(err.message || 'Airdrop failed');
     } finally {

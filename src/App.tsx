@@ -13,10 +13,11 @@ import { TokenDetail } from './pages/TokenDetail';
 import { LaunchPage } from './pages/LaunchPage';
 import { Dashboard } from './pages/Dashboard';
 import { Profile } from './pages/Profile';
+import { TwitterLiveFeed } from './components/TwitterLiveFeed';
 import { Token } from './types/token';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
-type Page = 'home' | 'explore' | 'token' | 'launch' | 'dashboard' | 'profile';
+type Page = 'home' | 'explore' | 'token' | 'launch' | 'dashboard' | 'profile' | 'radar';
 
 const AppContent: React.FC = () => {
   const { tokens, getTokenByMint } = useTokenStore();
@@ -42,7 +43,7 @@ const AppContent: React.FC = () => {
         }
       }
 
-      if (['home', 'explore', 'launch', 'dashboard', 'profile'].includes(hash)) {
+      if (['home', 'explore', 'launch', 'dashboard', 'profile', 'radar'].includes(hash)) {
         setCurrentPage(hash as Page);
       }
     };
@@ -192,6 +193,19 @@ const AppContent: React.FC = () => {
                 onOpenWalletModal={() => setWalletModalOpen(true)}
                 onNavigate={handleNavigate}
               />
+            </motion.div>
+          )}
+
+          {currentPage === 'radar' && (
+            <motion.div
+              key="radar"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              className="py-6 sm:py-8 space-y-6"
+            >
+              <TwitterLiveFeed onNavigate={handleNavigate} />
             </motion.div>
           )}
         </AnimatePresence>

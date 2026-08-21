@@ -595,6 +595,70 @@ app.get("/api/price/sol", async (_req, res) => {
   }
 });
 
+// Devnet Faucet / Airdrop endpoint with multiple RPC fallbacks
+app.post("/api/faucet/airdrop", async (req, res) => {
+  try {
+    const { publicKey, amountSol = 1 } = req.body;
+    if (!publicKey) {
+      return res.status(400).json({ success: false, error: "publicKey is required" });
+    }
+
+    const lamports = Math.floor(Number(amountSol) * 1_000_000_000);
+    const rpcUrls = [
+      "https://api.devnet.solana.com",
+      "https://devnet.helius-rpc.com/?api-key=15319bf4-5b40-4958-ac71-63321d0010b0",
+      "https://rpc.ankr.com/solana_devnet",
+    ];
+
+    let lastError: string | null = null;
+    let signature: string | null = null;
+
+    for (const rpc of rpcUrls) {
+      try {
+        const response = await fetch(rpc, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            id: 1,
+            method: "requestAirdrop",
+            params: [publicKey, lamports],
+          }),
+        });
+
+        if (response.ok) {
+          const json = (await response.json()) as any;
+          if (json.result) {
+            signature = json.result;
+            break;
+          } else if (json.error) {
+            lastError = json.error.message || JSON.stringify(json.error);
+          }
+        }
+      } catch (err: any) {
+        lastError = err.message || "Network error";
+      }
+    }
+
+    if (!signature) {
+      return res.status(429).json({
+        success: false,
+        error: lastError || "Solana Devnet faucet rate limit reached. Using test balance simulation mode.",
+      });
+    }
+
+    res.json({
+      success: true,
+      signature,
+      amountSol,
+      publicKey,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message || "Airdrop failed" });
+  }
+});
+
+
 // App configuration endpoint
 app.get("/api/config", (_req, res) => {
   res.json({

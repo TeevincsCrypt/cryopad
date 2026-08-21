@@ -1,6 +1,6 @@
 {
   "name": "Swagpad",
-  "description": "Production-grade Solana token launchpad with multi-wallet bundling (up to 10 wallets), bonding curve trading, real Solana wallet integration, and live price charting.",
+  "description": "Production-grade Solana token launchpad with multi-wallet bundling (up to 10 wallets), live X/Twitter meme radar with 1-click launch presets, bonding curve trading, real Solana wallet integration, and live price charting.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

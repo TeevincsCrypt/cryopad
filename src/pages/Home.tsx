@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Token } from '../types/token';
 import { TokenCard } from '../components/TokenCard';
+import { TwitterLiveFeed } from '../components/TwitterLiveFeed';
 import { formatCompactNumber, SOL_PRICE_USD } from '../solana/bondingCurve';
 
 interface HomeProps {
@@ -116,6 +117,11 @@ export const Home: React.FC<HomeProps> = ({ tokens, onNavigate, onSelectToken })
             </span>
           </div>
         </div>
+      </section>
+
+      {/* Live Twitter / X Meme Radar Feed */}
+      <section>
+        <TwitterLiveFeed onNavigate={onNavigate} />
       </section>
 
       {/* Trending Tokens Section */}

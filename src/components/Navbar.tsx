@@ -47,6 +47,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const navLinks = [
     { id: 'home', label: 'Home', icon: Flame },
     { id: 'explore', label: 'Explore', icon: LayoutGrid },
+    { id: 'radar', label: 'X Radar', icon: Zap },
     { id: 'dashboard', label: 'Portfolio', icon: Activity },
     { id: 'profile', label: 'Profile', icon: Layers },
   ];

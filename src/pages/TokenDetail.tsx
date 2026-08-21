@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   ArrowLeft, 
   ExternalLink, 
@@ -44,12 +44,18 @@ export const TokenDetail: React.FC<TokenDetailProps> = ({
   onNavigate,
 }) => {
   const { network } = useSolana();
-  const { getTradesForToken, getCandlesForToken, setClonedTokenDraft } = useTokenStore();
+  const { getTradesForToken, getCandlesForToken, setClonedTokenDraft, startLiveTradeSimulation } = useTokenStore();
 
   const [activeTab, setActiveTab] = useState<'trades' | 'holders' | 'security' | 'info'>('trades');
   const [timeframe, setTimeframe] = useState<'1m' | '5m' | '15m' | '1H' | '24H' | '7D'>('15m');
   const [copiedMint, setCopiedMint] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (token.mintAddress || token.id) {
+      startLiveTradeSimulation(token.mintAddress || token.id);
+    }
+  }, [token.mintAddress, token.id, startLiveTradeSimulation]);
 
   const trades = getTradesForToken(token.mintAddress || token.id);
   const candlesRaw = getCandlesForToken(token.mintAddress || token.id, timeframe);

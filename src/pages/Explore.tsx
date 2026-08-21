@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Search, 
   LayoutGrid, 
@@ -12,11 +12,13 @@ import {
   SlidersHorizontal,
   PlusCircle,
   Copy,
+  Loader2,
 } from 'lucide-react';
 import { Token, TokenCategory } from '../types/token';
 import { TokenCard } from '../components/TokenCard';
 import { TokenTable } from '../components/TokenTable';
 import { TrendingTokens } from '../components/TrendingTokens';
+import { useTokenStore } from '../data/tokenStore';
 
 interface ExploreProps {
   tokens: Token[];
@@ -27,12 +29,15 @@ interface ExploreProps {
 type SortOption = 'market_cap' | 'volume' | 'change' | 'newest' | 'bonding_progress';
 
 export const Explore: React.FC<ExploreProps> = ({ tokens, onSelectToken, onNavigate }) => {
+  const { searchAndFetchCA } = useTokenStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<TokenCategory>('all');
   const [tagFilter, setTagFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<SortOption>('volume');
   const [showTrendingCloner, setShowTrendingCloner] = useState<boolean>(true);
+  const [isSearchingCA, setIsSearchingCA] = useState<boolean>(false);
+  const [caSearchFound, setCaSearchFound] = useState<Token | null>(null);
 
   const categories: Array<{ id: TokenCategory; label: string; icon: React.ComponentType<{ className?: string }> }> = [
     { id: 'all', label: 'All Tokens', icon: Filter },
@@ -45,9 +50,38 @@ export const Explore: React.FC<ExploreProps> = ({ tokens, onSelectToken, onNavig
 
   const tagOptions = ['all', 'ai', 'meme', 'defi', 'gaming', 'depin', 'utility'];
 
+  // Real-time CA Lookup for Explore search
+  useEffect(() => {
+    const trimmed = searchQuery.trim();
+    if (!trimmed || trimmed.length < 32) {
+      setCaSearchFound(null);
+      setIsSearchingCA(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsSearchingCA(true);
+      try {
+        const found = await searchAndFetchCA(trimmed);
+        setCaSearchFound(found);
+      } catch (e) {
+        console.warn("Explore CA lookup notice:", e);
+      } finally {
+        setIsSearchingCA(false);
+      }
+    }, 450);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, searchAndFetchCA]);
+
   // Filter and Sort Pipeline
   const filteredAndSortedTokens = useMemo(() => {
     let result = [...tokens];
+
+    // If a CA was specifically found and isn't yet in list, ensure it's included at the top
+    if (caSearchFound && !result.some((t) => t.mintAddress === caSearchFound.mintAddress)) {
+      result.unshift(caSearchFound);
+    }
 
     // Search Query
     if (searchQuery.trim()) {
@@ -86,7 +120,7 @@ export const Explore: React.FC<ExploreProps> = ({ tokens, onSelectToken, onNavig
     });
 
     return result;
-  }, [tokens, searchQuery, selectedCategory, tagFilter, sortBy]);
+  }, [tokens, searchQuery, selectedCategory, tagFilter, sortBy, caSearchFound]);
 
   return (
     <div className="space-y-8 py-6 sm:py-8">
@@ -125,14 +159,23 @@ export const Explore: React.FC<ExploreProps> = ({ tokens, onSelectToken, onNavig
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
           {/* Search Input */}
           <div className="relative flex-1">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            {isSearchingCA ? (
+              <Loader2 className="w-4 h-4 text-emerald-600 animate-spin absolute left-3.5 top-1/2 -translate-y-1/2" />
+            ) : (
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            )}
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search token name, symbol ($SWAG), or contract address..."
+              placeholder="Search token name, symbol ($SWAG), or paste Contract Address (CA)..."
               className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-xs text-slate-900 placeholder-slate-400 outline-none transition-all shadow-xs"
             />
+            {isSearchingCA && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded">
+                Searching On-Chain CA...
+              </span>
+            )}
           </div>
 
           {/* Sort & View Mode Switches */}
@@ -226,20 +269,24 @@ export const Explore: React.FC<ExploreProps> = ({ tokens, onSelectToken, onNavig
           <div className="w-12 h-12 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto text-slate-400">
             <Search className="w-6 h-6" />
           </div>
-          <h3 className="text-base font-bold text-slate-900">No tokens matched your filters</h3>
+          <h3 className="text-base font-bold text-slate-900">
+            {isSearchingCA ? "Querying Solana Blockchain for Contract Address..." : "No tokens matched your filters"}
+          </h3>
           <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            Try adjusting your search keywords or switching back to the "All Tokens" tab.
+            {isSearchingCA ? "Looking up on-chain mint and DEX liquidity pairs..." : "Try adjusting your search keywords or paste a 32-44 character Solana Contract Address (CA)."}
           </p>
-          <button
-            onClick={() => {
-              setSearchQuery('');
-              setSelectedCategory('all');
-              setTagFilter('all');
-            }}
-            className="px-4 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-900 text-xs font-bold border border-slate-200 transition-colors cursor-pointer"
-          >
-            Clear Filters
-          </button>
+          {!isSearchingCA && (
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setSelectedCategory('all');
+                setTagFilter('all');
+              }}
+              className="px-4 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-900 text-xs font-bold border border-slate-200 transition-colors cursor-pointer"
+            >
+              Clear Filters
+            </button>
+          )}
         </div>
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -260,3 +307,4 @@ export const Explore: React.FC<ExploreProps> = ({ tokens, onSelectToken, onNavig
     </div>
   );
 };
+

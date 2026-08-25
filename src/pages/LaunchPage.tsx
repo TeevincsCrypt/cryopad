@@ -116,6 +116,43 @@ export const LaunchPage: React.FC<LaunchPageProps> = ({
   const [createdMint, setCreatedMint] = useState<string | null>(null);
   const [bundleResults, setBundleResults] = useState<BundleWalletItem[]>([]);
 
+  // AgentRouter AI Token Generation State
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isAiGenerating, setIsAiGenerating] = useState(false);
+  const [aiStatusMessage, setAiStatusMessage] = useState<string | null>(null);
+  const [showAiGenerator, setShowAiGenerator] = useState(false);
+
+  const handleGenerateWithAi = async () => {
+    if (!aiPrompt.trim()) return;
+    setIsAiGenerating(true);
+    setAiStatusMessage(null);
+    try {
+      const res = await fetch('/api/ai/generate-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: aiPrompt.trim() }),
+      });
+      const data = await res.json();
+      if (data.success && data.token) {
+        setName(data.token.name || name);
+        setSymbol(data.token.symbol || symbol);
+        setDescription(data.token.description || description);
+        if (data.token.imageUrl && !imagePreview) {
+          setImageUrl(data.token.imageUrl);
+          setImagePreview(data.token.imageUrl);
+        }
+        setAiStatusMessage(`Generated "${data.token.name}" ($${data.token.symbol}) using AgentRouter AI!`);
+        setTimeout(() => setAiStatusMessage(null), 4000);
+      } else {
+        setErrorMessage(data.error || 'Failed to generate token concept via AgentRouter AI.');
+      }
+    } catch (err: any) {
+      setErrorMessage(err.message || 'AI request failed');
+    } finally {
+      setIsAiGenerating(false);
+    }
+  };
+
   // Pre-fill if cloned token draft exists
   useEffect(() => {
     if (clonedTokenDraft) {
@@ -552,9 +589,77 @@ export const LaunchPage: React.FC<LaunchPageProps> = ({
         <form onSubmit={handleLaunch} className="lg:col-span-2 space-y-6">
           {/* 1. Token Metadata Card */}
           <div className="p-6 sm:p-8 rounded-2xl bg-white border border-slate-200 space-y-6 shadow-sm">
-            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2 pb-2 border-b border-slate-100">
-              <Sparkles className="w-4 h-4 text-emerald-600" /> 1. Token Identity & Metadata
-            </h3>
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100 flex-wrap gap-2">
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-emerald-600" /> 1. Token Identity & Metadata
+              </h3>
+              <button
+                id="toggle-ai-generator-btn"
+                type="button"
+                onClick={() => setShowAiGenerator(!showAiGenerator)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-800 text-xs font-bold transition-all cursor-pointer shadow-2xs"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                <span>{showAiGenerator ? 'Hide AI Assist' : 'Generate with AgentRouter AI'}</span>
+              </button>
+            </div>
+
+            {/* AgentRouter AI Prompt Drawer */}
+            {showAiGenerator && (
+              <div id="agentrouter-ai-prompt-drawer" className="p-4 rounded-xl bg-gradient-to-r from-purple-50 via-slate-50 to-indigo-50 border border-purple-200 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-purple-950 uppercase tracking-wider flex items-center gap-1.5">
+                      <Zap className="w-3.5 h-3.5 text-purple-600" /> AgentRouter AI Meme Engine
+                    </span>
+                    <span className="text-[10px] bg-purple-200 text-purple-900 px-1.5 py-0.5 rounded font-mono">
+                      OpenAI-Compatible
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-purple-700">Consumes AgentRouter Credits</span>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    id="ai-prompt-input"
+                    type="text"
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    placeholder="Enter meme theme, joke, or concept (e.g. 'Space dog wearing Solana glasses' or 'Trump AI crypto reserve')"
+                    className="flex-1 px-3.5 py-2 rounded-xl bg-white border border-purple-200 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleGenerateWithAi();
+                      }
+                    }}
+                  />
+                  <button
+                    id="trigger-ai-gen-btn"
+                    type="button"
+                    onClick={handleGenerateWithAi}
+                    disabled={isAiGenerating || !aiPrompt.trim()}
+                    className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer shrink-0"
+                  >
+                    {isAiGenerating ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Generating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Generate Preset</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+                {aiStatusMessage && (
+                  <p className="text-xs text-emerald-700 bg-emerald-100/80 border border-emerald-300 px-2.5 py-1 rounded-lg font-medium">
+                    ✓ {aiStatusMessage}
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Name & Symbol */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

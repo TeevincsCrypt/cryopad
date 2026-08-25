@@ -23,4 +23,6 @@ export interface TweetFeedItem {
   memePotential: 'URGENT' | 'HIGH' | 'MEDIUM' | 'VIRAL';
   preset: TweetMemePreset;
   relatedCategory: 'meme' | 'ai' | 'defi' | 'utility';
+  isLive?: boolean;
+  source?: string;
 }
